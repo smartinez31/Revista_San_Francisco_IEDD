@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Revista Digital del Colegio San Francisco IED - Programa Talentos y Capacidades Excepcionales">
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+    <title>Revista Digital - Colegio San Francisco IED</title>
+    
+    <!-- PWA Meta Tags Básicos -->
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Manifest sin referencias a iconos faltantes -->
+    <link rel="manifest" href="manifest.json">
+
+
+    <!-- Service Worker Registration Simplificado -->
+    <!-- CORREGIR EN EL <head> DEL HTML -->
+<script>
+    if ('serviceWorker' in navigator) {  // ✅ CORREGIDO: navigator
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')  // ✅ CORREGIDO
+                .then(function(registration) {
+                    console.log('✅ ServiceWorker registrado: ', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('❌ Error ServiceWorker: ', error);
+                });
+        });
+    }
+        // Verificar conexión
+        function updateOnlineStatus() {
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                statusElement.style.display = navigator.onLine ? 'none' : 'block';
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        document.addEventListener('DOMContentLoaded', updateOnlineStatus);
+    </script>
+</head>
+<body>
+    <!-- Header Público (visible para todos) -->
+    <header id="main-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="school-logo">CSF</div>
+                    <div class="logo-text">
+                        <h1>Revista Digital</h1>
+                        <p>Colegio San Francisco IED - Programa Talentos</p>
+                    </div>
+                </div>
+                <nav>
+                    <ul id="nav-menu">
+                        <li><a href="#" onclick="showPublicMagazine()">🏠</a></li>
+                        <li><a href="#" onclick="showPage('login-page')">🔐</a></li>
+                    </ul>
+                </nav>
+                <div class="user-info" id="user-info">
+                    <button onclick="showPublicMagazine()" class="btn-outline">👀 Ver Revista</button>
+                    <button onclick="showPage('login-page')">🔐 Ingresar</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Indicador de conexión -->
+    <div id="connection-status" class="connection-status-offline" style="display: none;">
+        🌐 Sin conexión - Modo offline activado
+    </div>
+
+    <main class="container">
+        <!-- Página Pública - Revista para Espectadores -->
+        <div id="public-magazine-page" class="page active">
+            <div class="magazine-header">
+                <h1>Revista Anual 2025 - Programa Talentos</h1>
+                <p class="magazine-subtitle">Capacidades Excepcionales - Colegio San Francisco IED</p>
+                <div class="search-container">
+                    <input type="text" id="public-search" placeholder="🔍 Buscar artículos, autores..." 
+                           onkeypress="if(event.key === 'Enter') searchInMagazine()">
+                    <button onclick="searchInMagazine()">Buscar</button>
+                </div>
+            </div>
+
+            <!-- Portada -->
+            <section class="chapter" id="portada">
+                <div class="chapter-header">
+                    <h2>Portada</h2>
+                    <span class="chapter-badge">Presentación</span>
+                </div>
+                <div class="editorial-content">
+                    <div class="editorial-card">
+                        <h3>Palabras de la Coordinadora</h3>
+                        <div class="editorial-meta">
+                            <span>Por: Angie Granados</span>
+                            <span>Coordinadora Programa Talentos</span>
+                        </div>
+                        <div class="editorial-text">
+                            <p>Es un honor presentar nuestra primera revista digital del Programa Talentos y Capacidades Excepcionales. Esta publicación representa el esfuerzo, dedicación y talento de nuestros estudiantes...</p>
+                            <p>En estas páginas encontrarán los logros, experiencias y reflexiones de nuestra comunidad educativa, demostrando que en un colegio público de estrato 2 también florecen grandes talentos.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Capítulo 1: Portafolios Estudiantiles -->
+            <section class="chapter" id="portafolios">
+                <div class="chapter-header">
+                    <h2>Capítulo 1: Portafolios Estudiantiles</h2>
+                    <span class="chapter-badge talento-artistico">Artístico</span>
+                </div>
+                <div class="articles-grid" id="public-portafolios-grid">
+                    <!-- Portafolios se cargarán con JavaScript -->
+                </div>
+            </section>
+
+            <!-- Capítulo 2: Experiencias Pedagógicas -->
+            <section class="chapter" id="experiencias">
+                <div class="chapter-header">
+                    <h2>Capítulo 2: Experiencias Pedagógicas</h2>
+                    <span class="chapter-badge talento-educativo">Educativo</span>
+                </div>
+                <div class="articles-grid" id="public-experiencias-grid">
+                    <!-- Experiencias se cargarán con JavaScript -->
+                </div>
+            </section>
+
+            <!-- Capítulo 3: Posicionamiento Crítico -->
+            <section class="chapter" id="posicionamiento">
+                <div class="chapter-header">
+                    <h2>Capítulo 3: Posicionamiento Crítico</h2>
+                    <span class="chapter-badge talento-critico">Reflexión</span>
+                </div>
+                <div class="articles-grid" id="public-posicionamiento-grid">
+                    <!-- Reflexiones se cargarán con JavaScript -->
+                </div>
+            </section>
+
+            <!-- Sección de Juegos Públicos -->
+            <section class="chapter" id="juegos-publicos">
+                <div class="chapter-header">
+                    <h2>🎮 Juegos Educativos</h2>
+                    <span class="chapter-badge">Interactivo</span>
+                </div>
+                <div class="games-grid" id="public-games-grid">
+                    <div class="game-card" onclick="showGamesPage()">
+                        <div class="game-icon">🧩</div>
+                        <h3>Sudoku Matemático</h3>
+                        <p>Desafía tu lógica con números y ejercita tu mente</p>
+                        <div class="game-meta">
+                            <span class="difficulty-badge intermedio">Intermedio</span>
+                            <span class="game-category">🔢 Matemático</span>
+                        </div>
+                        <button class="btn-play">🎮 Jugar Ahora</button>
+                    </div>
+                    <div class="game-card" onclick="showGamesPage()">
+                        <div class="game-icon">📝</div>
+                        <h3>Crucigrama Lingüístico</h3>
+                        <p>Amplía tu vocabulario con palabras educativas</p>
+                        <div class="game-meta">
+                            <span class="difficulty-badge facil">Fácil</span>
+                            <span class="game-category">📝 Lingüístico</span>
+                        </div>
+                        <button class="btn-play">🎮 Jugar Ahora</button>
+                    </div>
+                    <div class="game-card" onclick="showGamesPage()">
+                        <div class="game-icon">🎵</div>
+                        <h3>Memoria Musical</h3>
+                        <p>Encuentra parejas de instrumentos musicales</p>
+                        <div class="game-meta">
+                            <span class="difficulty-badge facil">Fácil</span>
+                            <span class="game-category">🎵 Musical</span>
+                        </div>
+                        <button class="btn-play">🎮 Jugar Ahora</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cierre y Créditos -->
+            <section class="chapter" id="cierre">
+                <div class="chapter-header">
+                    <h2>Agradecimientos y Créditos</h2>
+                    <span class="chapter-badge">Equipo</span>
+                </div>
+                <div class="creditos-content">
+                    <div class="equipo-grid">
+                        <div class="miembro-equipo">
+                            <h4>Coordinación General</h4>
+                            <p>Angie Granados</p>
+                        </div>
+                        <div class="miembro-equipo">
+                            <h4>Equipo Editorial</h4>
+                            <p>Estudiantes del Programa Talentos</p>
+                        </div>
+                        <div class="miembro-equipo">
+                            <h4>Docentes Asesores</h4>
+                            <p>Departamento de Pedagogía</p>
+                        </div>
+                        <div class="miembro-equipo">
+                            <h4>Diseño y Desarrollo</h4>
+                            <p>Equipo de Tecnología</p>
+                        </div>
+                    </div>
+                    <div class="institucional-info">
+                        <p><strong>Colegio San Francisco IED</strong></p>
+                        <p>Programa Talentos y Capacidades Excepcionales</p>
+                        <p>Revista Anual 2025</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-page" class="page">
+            <div class="login-container">
+                <div class="login-header">
+                    <h2>Acceso al Sistema</h2>
+                    <p>Revista Digital - Gestión de Contenidos</p>
+                    <button class="btn-help" onclick="showHelp('login')">❓ Ayuda</button>
+                </div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Usuario</label>
+                        <input type="text" id="username" required placeholder="Ingrese su usuario">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" required placeholder="Ingrese su contraseña">
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Rol</label>
+                        <select id="role" required>
+                            <option value="">Seleccione su rol</option>
+                            <option value="student">Estudiante Reportero</option>
+                            <option value="teacher">Docente</option>
+                            <option value="admin">Administrador</option>
+                            <option value="parent">Padre de Familia</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-login">Ingresar al Sistema</button>
+                </form>
+                <div class="login-footer">
+                    <p>¿No tienes cuenta? <a href="#" onclick="showPublicMagazine()">Continúa como espectador</a></p>
+                    <p><small>Credenciales de prueba: admin / admin</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Panel Principal</h2>
+                <div class="user-welcome">
+                    Bienvenido/a, <span id="welcome-user-name"></span>
+                    <button class="btn-help" onclick="showHelp('dashboard')">❓</button>
+                </div>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="card card-published">
+                    <div class="card-icon">📊</div>
+                    <h3>Artículos Publicados</h3>
+                    <div class="number" id="published-count">0</div>
+                </div>
+                <div class="card card-pending">
+                    <div class="card-icon">⏳</div>
+                    <h3>Artículos Pendientes</h3>
+                    <div class="number" id="pending-count">0</div>
+                </div>
+                <div class="card card-comments">
+                    <div class="card-icon">💬</div>
+                    <h3>Comentarios</h3>
+                    <div class="number" id="comments-count">0</div>
+                </div>
+                <div class="card card-users">
+                    <div class="card-icon">👥</div>
+                    <h3>Usuarios Activos</h3>
+                    <div class="number" id="users-count">0</div>
+                </div>
+            </div>
+            
+            <div class="dashboard-section">
+                <h3>Notificaciones Recientes 
+                    <button class="btn-help" onclick="showHelp('notifications')">❓</button>
+                </h3>
+                <div id="notifications-list" class="notifications-container">
+                    <!-- Notifications will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="dashboard-section">
+                <h3>Acciones Rápidas 
+                    <button class="btn-help" onclick="showHelp('actions')">❓</button>
+                </h3>
+                <div class="quick-actions">
+                    <button class="btn-action" onclick="showNewArticleForm()">
+                        <span>📝</span>
+                        <span>Nuevo Artículo</span>
+                    </button>
+                    <button class="btn-action" onclick="showPage('articles-page'); loadArticles()">
+                        <span>📚</span>
+                        <span>Ver Artículos</span>
+                    </button>
+                    <button class="btn-action" onclick="showGamesPage()">
+                        <span>🎮</span>
+                        <span>Juegos Educativos</span>
+                    </button>
+                    <button class="btn-action" onclick="showPublicMagazine()">
+                        <span>👀</span>
+                        <span>Ver Revista Pública</span>
+                    </button>
+                    <button class="btn-action" onclick="showChangePasswordForm()">
+                        <span>🔒</span>
+                        <span>Cambiar Contraseña</span>
+                    </button>
+                    <button class="btn-action" onclick="exportData()" id="export-btn" style="display: none;">
+                        <span>📤</span>
+                        <span>Exportar Datos</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Articles Page -->
+        <div id="articles-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Gestión de Artículos</h2>
+                <div class="page-actions">
+                    <button id="new-article-btn" class="btn-success">➕ Nuevo Artículo</button>
+                    <button onclick="showPublicMagazine()" class="btn-outline">👀 Ver Revista Pública</button>
+                    <button class="btn-help" onclick="showHelp('articles')">❓</button>
+                </div>
+            </div>
+            
+            <div class="filters-section">
+                <select id="article-filter" onchange="filterArticles()">
+                    <option value="all">Todos los artículos</option>
+                    <option value="published">Publicados</option>
+                    <option value="pending">Pendientes</option>
+                    <option value="draft">Borradores</option>
+                    <option value="rejected">Rechazados</option>
+                </select>
+                <select id="category-filter" onchange="filterArticles()">
+                    <option value="all">Todas las categorías</option>
+                    <option value="deportivo">Deportivo</option>
+                    <option value="musical">Musical</option>
+                    <option value="matematico">Matemático</option>
+                    <option value="linguistico">Lingüístico</option>
+                    <option value="tecnologico">Tecnológico</option>
+                    <option value="artistico">Artístico</option>
+                </select>
+                <select id="chapter-filter" onchange="filterArticles()">
+                    <option value="all">Todos los capítulos</option>
+                    <option value="portafolios">Portafolios</option>
+                    <option value="experiencias">Experiencias</option>
+                    <option value="posicionamiento">Posicionamiento</option>
+                </select>
+            </div>
+            
+            <div class="articles-grid" id="articles-grid">
+                <!-- Articles will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Create/Edit Article Page -->
+        <div id="article-form-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title" id="article-form-title">Crear Nuevo Artículo</h2>
+                <button onclick="showPage('articles-page'); loadArticles()" class="btn-outline">← Volver</button>
+            </div>
+            
+            <div class="form-container">
+                <form id="article-form">
+                    <input type="hidden" id="article-id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="article-title">Título del Artículo</label>
+                            <input type="text" id="article-title" required placeholder="Ingrese un título atractivo">
+                            <small class="char-count" id="title-char-count">0/100 caracteres</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="article-chapter">Capítulo</label>
+                            <select id="article-chapter" required>
+                                <option value="">Seleccione un capítulo</option>
+                                <option value="portafolios">Portafolios Estudiantiles</option>
+                                <option value="experiencias">Experiencias Pedagógicas</option>
+                                <option value="posicionamiento">Posicionamiento Crítico</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="article-category">Tipo de Talento</label>
+                            <select id="article-category" required>
+                                <option value="">Seleccione el talento</option>
+                                <option value="deportivo">🏃 Deportivo</option>
+                                <option value="musical">🎵 Musical</option>
+                                <option value="matematico">🔢 Matemático</option>
+                                <option value="linguistico">📝 Lingüístico</option>
+                                <option value="tecnologico">💻 Tecnológico</option>
+                                <option value="artistico">🎨 Artístico</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="article-status">Estado</label>
+                            <select id="article-status">
+                                <option value="draft">Borrador</option>
+                                <option value="pending">Enviar para revisión</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-content">Contenido del Artículo</label>
+                        <textarea id="article-content" required placeholder="Desarrolle aquí el contenido de su artículo..."></textarea>
+                        <small class="char-count" id="content-char-count">0/2000 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-image-upload">Subir Imagen</label>
+                        <input type="file" id="article-image-upload" accept="image/*" onchange="previewImage(this)">
+                        <small>Formatos aceptados: JPG, PNG, GIF (Máx. 2MB)</small>
+                        <div id="image-preview" class="image-preview" style="display: none;">
+                            <img id="preview-img" src="" alt="Vista previa">
+                            <button type="button" onclick="removeImage()" class="btn-danger">❌ Eliminar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" id="save-article-btn" class="btn-success">💾 Guardar Artículo</button>
+                        <button type="button" id="cancel-article-btn" class="btn-outline">❌ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pending Articles Page (for teachers/admins) -->
+        <div id="pending-articles-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Artículos Pendientes de Revisión</h2>
+                <div class="page-actions">
+                    <button onclick="showPage('dashboard-page')" class="btn-outline">← Volver al Dashboard</button>
+                    <button class="btn-help" onclick="showHelp('review')">❓</button>
+                </div>
+            </div>
+            
+            <div class="pending-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-pending">0</span>
+                    <span class="stat-label">Total Pendientes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="pending-this-week">0</span>
+                    <span class="stat-label">Esta Semana</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="pending-urgent">0</span>
+                    <span class="stat-label">Urgentes (>7 días)</span>
+                </div>
+            </div>
+            
+            <div class="articles-grid" id="pending-articles-grid">
+                <!-- Pending articles will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Users Management Page (for admins) -->
+        <div id="users-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Gestión de Usuarios</h2>
+                <div class="page-actions">
+                    <button onclick="showCreateUserForm()" class="btn-success">➕ Nuevo Usuario</button>
+                    <button onclick="showPage('dashboard-page')" class="btn-outline">← Dashboard</button>
+                    <button class="btn-help" onclick="showHelp('users')">❓</button>
+                </div>
+            </div>
+            
+            <div class="users-stats">
+                <div class="stat-card">
+                    <h4>Total Usuarios</h4>
+                    <div class="stat-number" id="total-users">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Estudiantes</h4>
+                    <div class="stat-number" id="student-users">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Docentes</h4>
+                    <div class="stat-number" id="teacher-users">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Activos</h4>
+                    <div class="stat-number" id="active-users">0</div>
+                </div>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Último Acceso</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <!-- Users will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Create User Form (for admins) -->
+        <div id="create-user-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Crear Nuevo Usuario</h2>
+                <button onclick="showPage('users-page'); loadUsers()" class="btn-outline">← Volver</button>
+            </div>
+            
+            <div class="form-container">
+                <form id="create-user-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="new-user-name">Nombre Completo</label>
+                            <input type="text" id="new-user-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-user-username">Nombre de Usuario</label>
+                            <input type="text" id="new-user-username" required>
+                            <small id="username-availability"></small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="new-user-password">Contraseña</label>
+                            <input type="password" id="new-user-password" required>
+                            <small>Mínimo 3 caracteres</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-user-role">Rol</label>
+                            <select id="new-user-role" required>
+                                <option value="student">Estudiante Reportero</option>
+                                <option value="teacher">Docente</option>
+                                <option value="parent">Padre de Familia</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-user-talento">Talento Principal (solo estudiantes)</label>
+                        <select id="new-user-talento">
+                            <option value="">Seleccione talento</option>
+                            <option value="deportivo">Deportivo</option>
+                            <option value="musical">Musical</option>
+                            <option value="matematico">Matemático</option>
+                            <option value="linguistico">Lingüístico</option>
+                            <option value="tecnologico">Tecnológico</option>
+                            <option value="artistico">Artístico</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-success">👤 Crear Usuario</button>
+                        <button type="button" onclick="showPage('users-page'); loadUsers()" class="btn-outline">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Password Page -->
+        <div id="change-password-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Cambiar Contraseña</h2>
+                <button onclick="showPage('dashboard-page')" class="btn-outline">← Volver</button>
+            </div>
+            
+            <div class="form-container">
+                <form id="change-password-form">
+                    <div class="form-group">
+                        <label for="current-password">Contraseña Actual</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-password">Nueva Contraseña</label>
+                        <input type="password" id="new-password" required>
+                        <small>Mínimo 3 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-password">Confirmar Nueva Contraseña</label>
+                        <input type="password" id="confirm-password" required>
+                        <small id="password-match"></small>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-success">🔒 Cambiar Contraseña</button>
+                        <button type="button" onclick="showPage('dashboard-page')" class="btn-outline">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Article Detail Page -->
+        <div id="article-detail-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">Detalle del Artículo</h2>
+                <button onclick="showPage('articles-page'); loadArticles()" class="btn-outline">← Volver</button>
+            </div>
+            
+            <div id="article-detail-content">
+                <!-- Article detail will be populated by JavaScript -->
+            </div>
+            
+            <div class="comments-section">
+                <h3>💬 Comentarios <span id="comments-count-badge">(0)</span></h3>
+                <div id="comments-list">
+                    <!-- Comments will be populated by JavaScript -->
+                </div>
+                
+                <div class="form-container">
+                    <h4>Agregar Comentario</h4>
+                    <form id="comment-form">
+                        <input type="hidden" id="comment-article-id">
+                        <div class="form-group">
+                            <textarea id="comment-content" placeholder="Escribe tu comentario..." required maxlength="500"></textarea>
+                            <small class="char-count" id="comment-char-count">0/500 caracteres</small>
+                        </div>
+                        <button type="submit" class="btn-success">📤 Publicar Comentario</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Games Page -->
+        <div id="games-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">🎮 Juegos Educativos</h2>
+                <div class="page-actions">
+                    <button onclick="showPage('dashboard-page')" class="btn-outline">← Volver al Dashboard</button>
+                    <button class="btn-help" onclick="showHelp('games')">❓</button>
+                </div>
+            </div>
+            
+            <div class="games-intro">
+                <p>Desarrolla tus habilidades a través de estos juegos educativos diseñados para potenciar diferentes tipos de talento.</p>
+                <div class="user-stats" id="user-game-stats" style="display: none;">
+                    <h4>🏆 Tus Estadísticas de Juego</h4>
+                    <div id="game-stats-content"></div>
+                </div>
+            </div>
+            
+            <div class="games-grid" id="games-grid">
+                <!-- Games will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Sudoku Game Page -->
+        <div id="sudoku-game-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">🧩 Sudoku Matemático</h2>
+                <button onclick="showGamesPage()" class="btn-outline">← Volver a Juegos</button>
+            </div>
+            <div id="sudoku-container">
+                <!-- Sudoku game will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Crossword Game Page -->
+        <div id="crossword-game-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">📝 Crucigrama Lingüístico</h2>
+                <button onclick="showGamesPage()" class="btn-outline">← Volver a Juegos</button>
+            </div>
+            <div id="crossword-container">
+                <!-- Crossword game will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Memory Game Page -->
+        <div id="memory-game-page" class="page">
+            <div class="page-header">
+                <h2 class="page-title">🎵 Juego de Memoria Musical</h2>
+                <button onclick="showGamesPage()" class="btn-outline">← Volver a Juegos</button>
+            </div>
+            <div id="memory-container">
+                <!-- Memory game will be rendered here -->
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Revista Digital</h4>
+                    <p>Colegio San Francisco IED</p>
+                    <p>Programa Talentos y Capacidades Excepcionales</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contacto</h4>
+                    <p>colegio@sanfrancisco.edu.co</p>
+                    <p>Bogotá, Colombia</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Enlaces Rápidos</h4>
+                    <a href="#" onclick="showPublicMagazine()">Ver Revista</a>
+                    <a href="#" onclick="showPage('login-page')">Acceso Usuarios</a>
+                    <a href="#" onclick="showGamesPage()">Juegos Educativos</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Colegio San Francisco IED. Todos los derechos reservados.</p>
+                <p><small>Versión 2.0 - Sistema de Revista Digital</small></p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

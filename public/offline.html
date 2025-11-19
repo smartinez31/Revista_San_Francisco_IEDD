@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modo Sin Conexión - Revista Digital CSF</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .offline-container {
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .message {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #f59e0b;
+            color: #1e3a8a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button.secondary {
+            background: transparent;
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+        }
+
+        .connection-status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .online {
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid #10b981;
+        }
+
+        .offline {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid #ef4444;
+        }
+
+        .school-info {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .offline-container {
+                padding: 2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        
+        <h1>Modo Sin Conexión</h1>
+        <p class="subtitle">Parece que no tienes conexión a Internet</p>
+        
+        <div class="message">
+            <p>No te preocupes, aún puedes acceder a algunas funciones de la revista digital.</p>
+            <p>Cuando recuperes la conexión, todo se sincronizará automáticamente.</p>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📚</div>
+                <h3>Artículos Guardados</h3>
+                <p>Accede a los artículos que ya has visto</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎮</div>
+                <h3>Juegos Educativos</h3>
+                <p>Juega sin necesidad de conexión</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✏️</div>
+                <h3>Borradores</h3>
+                <p>Sigue escribiendo tus artículos</p>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button onclick="tryReconnect()">🔄 Reintentar Conexión</button>
+            <button class="secondary" onclick="goToHome()">🏠 Ir al Inicio</button>
+        </div>
+
+        <div id="connection-status" class="connection-status">
+            <span id="status-text"></span>
+        </div>
+
+        <div class="school-info">
+            <p><strong>Colegio San Francisco IED</strong></p>
+            <p>Programa Talentos y Capacidades Excepcionales</p>
+            <p>Revista Digital 2025</p>
+        </div>
+    </div>
+
+    <script>
+        // Verificar estado de conexión
+        function checkConnection() {
+            const statusElement = document.getElementById('connection-status');
+            const statusText = document.getElementById('status-text');
+            
+            if (navigator.onLine) {
+                statusElement.style.display = 'block';
+                statusElement.className = 'connection-status online';
+                statusText.textContent = '✅ ¡Conexión restaurada! Redirigiendo...';
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } else {
+                statusElement.style.display = 'block';
+                statusElement.className = 'connection-status offline';
+                statusText.textContent = '❌ Sin conexión a Internet';
+            }
+        }
+
+        // Intentar reconectar
+        function tryReconnect() {
+            const statusElement = document.getElementById('connection-status');
+            const statusText = document.getElementById('status-text');
+            
+            statusElement.style.display = 'block';
+            statusElement.className = 'connection-status';
+            statusText.textContent = '🔍 Verificando conexión...';
+            
+            setTimeout(checkConnection, 1500);
+        }
+
+        // Ir a la página principal
+        function goToHome() {
+            window.location.href = '/';
+        }
+
+        // Event listeners para cambios de conexión
+        window.addEventListener('online', checkConnection);
+        window.addEventListener('offline', checkConnection);
+
+        // Verificar conexión al cargar
+        document.addEventListener('DOMContentLoaded', checkConnection);
+
+        // Intentar reconectar automáticamente cada 10 segundos
+        setInterval(checkConnection, 10000);
+    </script>
+</body>
+</html>

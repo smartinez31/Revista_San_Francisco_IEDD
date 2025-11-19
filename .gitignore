@@ -1,0 +1,48 @@
+# Variables de entorno
+.env
+.env.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Dependencias
+node_modules/
+npm-packages-offline-cache/
+
+# Archivos de subida
+uploads/
+temp/
+tmp/
+
+# Base de datos local
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos del sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos de build
+dist/
+build/
+.out/
+
+# Cache
+.npm
+.eslintcache

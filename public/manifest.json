@@ -1,0 +1,11 @@
+{
+  "name": "Revista Digital - Colegio San Francisco IED",
+  "short_name": "Revista CSF",
+  "description": "Revista Digital del Programa Talentos",
+  "version": "2.0.0",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait-primary"
+}
