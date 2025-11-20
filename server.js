@@ -1,3 +1,27 @@
+// =============================================================================
+// CREAR CARPETA PUBLIC SI NO EXISTE - SOLUCIÓN TEMPORAL
+// =============================================================================
+const publicDir = path.join(__dirname, 'public');
+if (!fs.existsSync(publicDir)) {
+    console.log('📁 Creando carpeta public...');
+    fs.mkdirSync(publicDir, { recursive: true });
+    
+    // Crear un index.html básico temporal
+    const basicHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Revista Digital CSF</title>
+        </head>
+        <body>
+            <h1>Revista Digital CSF - Cargando...</h1>
+            <p>Si ves esto, la carpeta public no se desplegó correctamente.</p>
+        </body>
+        </html>
+    `;
+    fs.writeFileSync(path.join(publicDir, 'index.html'), basicHTML);
+    console.log('📄 index.html temporal creado');
+}
 // server.js - VERSIÓN CORREGIDA Y OPTIMIZADA
 require('dotenv').config();
 const express = require('express');
