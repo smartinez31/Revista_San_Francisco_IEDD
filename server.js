@@ -22,49 +22,6 @@ const allowedOrigins = [
     'http://127.0.0.1:3000'
 ];
 
-// ✅ SERVIR ARCHIVOS ESTÁTICOS PARA IMÁGENES
-app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// ... resto de la configuración
-
-// ✅ FUNCIÓN PARA GUARDAR IMÁGENES BASE64
-async function saveBase64Image(base64Data, title) {
-    try {
-        // Crear directorio de imágenes si no existe
-        const imagesDir = path.join(__dirname, 'public', 'images');
-        if (!fs.existsSync(imagesDir)) {
-            fs.mkdirSync(imagesDir, { recursive: true });
-        }
-
-        // Extraer el tipo de imagen y los datos
-        const matches = base64Data.match(/^data:image\/([A-Za-z-+/]+);base64,(.+)$/);
-        if (!matches || matches.length !== 3) {
-            throw new Error('Formato de imagen base64 inválido');
-        }
-
-        const imageType = matches[1];
-        const imageData = matches[2];
-        const buffer = Buffer.from(imageData, 'base64');
-
-        // Generar nombre único para el archivo
-        const timestamp = Date.now();
-        const safeTitle = title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
-        const filename = `article_${safeTitle}_${timestamp}.${imageType}`;
-        const filePath = path.join(imagesDir, filename);
-
-        // Guardar archivo
-        fs.writeFileSync(filePath, buffer);
-        
-        // Retornar URL pública
-        return `/images/${filename}`;
-        
-    } catch (error) {
-        console.error('❌ Error guardando imagen:', error);
-        return null;
-    }
-}
-
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
@@ -76,8 +33,132 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
 
+// ⭐⭐ AQUÍ VAN LAS CONFIGURACIONES DE STATIC FILES - JUSTO EN ESTA POSICIÓN ⭐⭐
+app.use('/images', express.static(path.join(__dirname, 'public', 'images'), {
+    maxAge: '1d', // Cache por 1 día
+    etag: true
+}));
+
+app.use(express.static(path.join(__dirname, 'public'), {
+    maxAge: '1h',
+    etag: true
+}));
+
+// ==========================
+// FUNCIONES AUXILIARES
+// ==========================
+
+// Agrega esto temporalmente en server.js para debug
+app.get('/api/debug-images', (req, res) => {
+    const imagesDir = path.join(__dirname, 'public', 'images');
+    const files = fs.readdirSync(imagesDir);
+    console.log('📁 Archivos en images/', files);
+    res.json({ files });
+});
+
+// ✅ FUNCIÓN PARA GUARDAR IMÁGENES BASE64
+// ✅ FUNCIÓN MEJORADA PARA GUARDAR IMÁGENES
+async function saveBase64Image(base64Data, title) {
+    try {
+        console.log('🖼️ [IMAGE] Iniciando guardado de imagen...');
+        
+        // Crear directorio de imágenes si no existe
+        const imagesDir = path.join(__dirname, 'public', 'images');
+        if (!fs.existsSync(imagesDir)) {
+            console.log('📁 Creando directorio images:', imagesDir);
+            fs.mkdirSync(imagesDir, { recursive: true });
+        }
+
+        // Verificar que es una imagen base64 válida
+        if (!base64Data || typeof base64Data !== 'string') {
+            console.log('❌ [IMAGE] Datos de imagen inválidos');
+            return null;
+        }
+
+        // Extraer el tipo de imagen y los datos
+        const matches = base64Data.match(/^data:image\/([A-Za-z-+/]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) {
+            console.log('❌ [IMAGE] Formato base64 inválido');
+            return null;
+        }
+
+        const imageType = matches[1].toLowerCase();
+        const imageData = matches[2];
+        
+        // Validar tipo de imagen
+        const validTypes = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+        if (!validTypes.includes(imageType)) {
+            console.log('❌ [IMAGE] Tipo de imagen no soportado:', imageType);
+            return null;
+        }
+
+        // Convertir base64 a buffer
+        const buffer = Buffer.from(imageData, 'base64');
+        
+        // Validar tamaño (máximo 2MB)
+        if (buffer.length > 2 * 1024 * 1024) {
+            console.log('❌ [IMAGE] Imagen demasiado grande:', buffer.length);
+            return null;
+        }
+
+        // Generar nombre único para el archivo
+        const timestamp = Date.now();
+        const safeTitle = title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+        const fileExtension = imageType === 'jpeg' ? 'jpg' : imageType;
+        const filename = `article_${safeTitle}_${timestamp}.${fileExtension}`;
+        const filePath = path.join(imagesDir, filename);
+
+        // Guardar archivo
+        fs.writeFileSync(filePath, buffer);
+        
+        console.log('✅ [IMAGE] Imagen guardada exitosamente:', filename);
+        console.log('📁 [IMAGE] Ruta completa:', filePath);
+        
+        // Retornar URL pública (RELATIVA al servidor)
+        return `/images/${filename}`;
+        
+    } catch (error) {
+        console.error('❌ [IMAGE] Error guardando imagen:', error);
+        return null;
+    }
+}
+// ✅ RUTA DE DEBUG PARA VERIFICAR IMÁGENES
+app.get('/api/debug-images', (req, res) => {
+    try {
+        const imagesDir = path.join(__dirname, 'public', 'images');
+        
+        // Verificar si existe el directorio
+        if (!fs.existsSync(imagesDir)) {
+            return res.json({ 
+                exists: false, 
+                message: 'Directorio images no existe',
+                path: imagesDir 
+            });
+        }
+
+        // Leer archivos
+        const files = fs.readdirSync(imagesDir);
+        const imageFiles = files.filter(file => 
+            /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
+        );
+
+        console.log('📁 [DEBUG] Archivos en images/:', files);
+        console.log('🖼️ [DEBUG] Imágenes encontradas:', imageFiles);
+
+        res.json({ 
+            exists: true,
+            totalFiles: files.length,
+            imageFiles: imageFiles,
+            files: files,
+            path: imagesDir
+        });
+
+    } catch (error) {
+        console.error('❌ [DEBUG] Error leyendo directorio:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 // ==========================
 // MIDDLEWARE PARA HEADERS DE USUARIO
 // ==========================
@@ -177,63 +258,73 @@ app.post('/api/login', async (req, res) => {
 // ==========================
 // ARTÍCULOS (VERSIÓN ÚNICA CORREGIDA)
 // ==========================
-
-// ✅ CREAR ARTÍCULO - VERSIÓN ÚNICA CON SOPORTE DE IMÁGENES
+// ✅ RUTA CORREGIDA PARA CREAR ARTÍCULOS CON IMÁGENES
 app.post('/api/articles', async (req, res) => {
     try {
-        console.log('📥 [ARTICLES] Creando artículo con soporte de imágenes...');
+        console.log('📥 [ARTICLES] Creando artículo...');
+        console.log('🖼️ [ARTICLES] ¿Tiene imagen?', !!req.body.image_base64);
         
-        const { title, category, chapter, content, author_id, status, image_url, image_base64 } = req.body;
+        const { title, category, chapter, content, author_id, status, image_base64 } = req.body;
 
         // Validación básica
         if (!title?.trim() || !content?.trim() || !author_id) {
-            return res.status(400).json({ error: "Título, contenido y autor son requeridos" });
+            return res.status(400).json({ 
+                error: "Título, contenido y autor son requeridos" 
+            });
         }
 
-        // ✅ MANEJAR IMÁGENES - Prioridad: image_base64 > image_url
-        let finalImageUrl = null;
+        // ✅ MANEJAR IMÁGENES
+        let image_url = null;
         
         if (image_base64) {
-            // Guardar imagen base64 en una carpeta pública
-            finalImageUrl = await saveBase64Image(image_base64, title);
-            console.log('🖼️ Imagen base64 guardada:', finalImageUrl);
-        } else if (image_url) {
-            finalImageUrl = image_url;
-            console.log('🖼️ Usando image_url:', finalImageUrl);
+            console.log('🖼️ [ARTICLES] Procesando imagen base64...');
+            image_url = await saveBase64Image(image_base64, title);
+            console.log('🖼️ [ARTICLES] URL de imagen generada:', image_url);
         }
 
-        // ✅ SOLUCIÓN RADICAL - Sin parámetro para status
+        // Determinar status y published_at
         const statusValue = status === 'published' ? 'published' : 
                            status === 'pending' ? 'pending' : 
                            status === 'rejected' ? 'rejected' : 'draft';
 
         const publishedAt = status === 'published' ? 'NOW()' : 'NULL';
         
+        // ✅ QUERY CORREGIDA - Usar parámetros correctamente
         const queryText = `
             INSERT INTO articles (title, category, chapter, content, author_id, status, image_url, published_at)
-            VALUES ($1, $2, $3, $4, $5, '${statusValue}', $6, ${publishedAt})
+            VALUES ($1, $2, $3, $4, $5, $6, $7, ${publishedAt})
             RETURNING *
         `;
 
         const result = await query(queryText, [
-            String(title || ''),
-            String(category || ''),
-            String(chapter || ''),
-            String(content || ''),
-            parseInt(author_id) || 1,
-            finalImageUrl  // ✅ URL de la imagen
+            title.trim(),
+            category,
+            chapter,
+            content.trim(),
+            parseInt(author_id),
+            statusValue,
+            image_url  // Puede ser null si no hay imagen
         ]);
 
-        console.log('✅ Artículo creado exitosamente:', result.rows[0].id);
+        console.log('✅ [ARTICLES] Artículo creado exitosamente:', {
+            id: result.rows[0].id,
+            title: result.rows[0].title,
+            hasImage: !!result.rows[0].image_url,
+            imageUrl: result.rows[0].image_url
+        });
+
         res.json({ 
             success: true, 
             article: result.rows[0],
-            image_url: finalImageUrl 
+            image_url: image_url 
         });
 
     } catch (err) {
-        console.error("❌ Error creando artículo:", err.message);
-        res.status(500).json({ error: "Error creando artículo: " + err.message });
+        console.error("❌ [ARTICLES] Error creando artículo:", err.message);
+        console.error("❌ [ARTICLES] Stack:", err.stack);
+        res.status(500).json({ 
+            error: "Error creando artículo: " + err.message 
+        });
     }
 });
 // OBTENER ARTÍCULOS
@@ -280,6 +371,90 @@ app.get('/api/articles/:id', async (req, res) => {
     } catch (err) {
         console.error('❌ Error obteniendo artículo:', err);
         res.status(500).json({ error: "Error obteniendo artículo" });
+    }
+});
+// ⭐⭐ AGREGAR RUTA PARA APROBAR ARTÍCULOS ⭐⭐
+app.put('/api/articles/:id/approve', async (req, res) => {
+    try {
+        console.log('✅ [API] Aprobando artículo:', req.params.id);
+        
+        const userRole = req.headers['user-role'];
+        const userId = req.headers['user-id'];
+        
+        // Verificar permisos
+        if (userRole !== 'teacher' && userRole !== 'admin') {
+            return res.status(403).json({ 
+                error: "No autorizado. Solo docentes y administradores pueden aprobar artículos." 
+            });
+        }
+
+        // Actualizar en la base de datos
+        const result = await query(`
+            UPDATE articles 
+            SET status = 'published', 
+                published_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $1 
+            RETURNING *
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Artículo no encontrado" });
+        }
+
+        const updatedArticle = result.rows[0];
+        
+        console.log('✅ [API] Artículo aprobado:', updatedArticle.id);
+        
+        res.json({ 
+            success: true, 
+            article: updatedArticle,
+            message: "Artículo aprobado y publicado exitosamente"
+        });
+
+    } catch (err) {
+        console.error('❌ Error aprobando artículo:', err);
+        res.status(500).json({ 
+            error: "Error aprobando artículo: " + err.message 
+        });
+    }
+});
+// ⭐⭐ AGREGAR RUTA PARA RECHAZAR ARTÍCULOS ⭐⭐
+app.put('/api/articles/:id/reject', async (req, res) => {
+    try {
+        const { rejection_reason } = req.body;
+        const userRole = req.headers['user-role'];
+        
+        if (userRole !== 'teacher' && userRole !== 'admin') {
+            return res.status(403).json({ 
+                error: "No autorizado. Solo docentes y administradores pueden rechazar artículos." 
+            });
+        }
+
+        const result = await query(`
+            UPDATE articles 
+            SET status = 'rejected', 
+                rejection_reason = $1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2 
+            RETURNING *
+        `, [rejection_reason, req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Artículo no encontrado" });
+        }
+
+        res.json({ 
+            success: true, 
+            article: result.rows[0],
+            message: "Artículo rechazado exitosamente"
+        });
+
+    } catch (err) {
+        console.error('❌ Error rechazando artículo:', err);
+        res.status(500).json({ 
+            error: "Error rechazando artículo: " + err.message 
+        });
     }
 });
 // ==========================

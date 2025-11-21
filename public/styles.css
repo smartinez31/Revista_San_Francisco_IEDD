@@ -749,32 +749,61 @@ textarea {
   box-shadow: var(--shadow-lg);
 }
 
+/* Article Image Styles - CORREGIDOS */
 .article-image {
-  height: 180px;
-  background: linear-gradient(135deg, var(--institucional-gris-claro), #e2e8f0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--institucional-gris);
-  font-size: 3rem;
-  position: relative;
-  overflow: hidden;
+    height: 180px;
+    background: linear-gradient(135deg, var(--institucional-gris-claro), #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--institucional-gris);
+    font-size: 3rem;
+    position: relative;
+    overflow: hidden;
 }
 
+/* ⭐⭐ CORREGIR ESTILOS DE IMÁGENES ⭐⭐ */
+.article-image {
+    height: 180px;
+    background: linear-gradient(135deg, var(--institucional-gris-claro), #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--institucional-gris);
+    font-size: 3rem;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px 8px 0 0; /* Agregar bordes redondeados solo arriba */
+}
+
+/* ⭐⭐ ESTILOS ESPECÍFICOS PARA IMÁGENES DENTRO DE ARTICLE-IMAGE ⭐⭐ */
 .article-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ⭐⭐ IMPORTANTE: Esto hace que la imagen cubra el contenedor */
+    object-position: center;
+    transition: transform 0.3s ease;
+    display: block; /* Asegurar que sea bloque */
 }
 
-.article-image::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(59, 130, 246, 0.1));
+.article-image:hover img {
+    transform: scale(1.05);
+}
+
+/* Estilos para el icono cuando no hay imagen */
+.article-icon {
+    font-size: 3rem;
+    opacity: 0.7;
+}
+
+/* ⭐⭐ QUITAR el gradiente cuando hay imagen ⭐⭐ */
+.article-image:has(img) {
+    background: none;
+}
+
+/* ⭐⭐ AGREGAR borde para debugging temporal ⭐⭐ */
+.article-image img {
+    border: 2px solid #10b981; /* Verde temporal para verificar */
 }
 
 .article-content {
@@ -996,8 +1025,15 @@ textarea {
 }
 
 /* Comments Section */
+/* ⭐⭐ ESTILOS MEJORADOS PARA COMENTARIOS - AGREGAR DESPUÉS DE LOS ACTUALES ⭐⭐ */
+
+/* Comments Section */
 .comments-section {
   margin-top: 3rem;
+  padding: 2rem;
+  background: var(--institucional-gris-claro);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .comments-section h3 {
@@ -1015,6 +1051,231 @@ textarea {
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 0.8rem;
+}
+
+/* ⭐⭐ NUEVOS ESTILOS PARA COMENTARIOS MEJORADOS ⭐⭐ */
+
+/* Items de comentario */
+.comment-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: all 0.3s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.comment-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  border-color: var(--institucional-azul-claro);
+}
+
+/* Avatar del comentario */
+.comment-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--institucional-azul), var(--institucional-azul-claro));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Contenido del comentario */
+.comment-content {
+  flex: 1;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.comment-author {
+  color: var(--institucional-azul);
+  font-weight: 600;
+}
+
+.comment-time {
+  color: var(--institucional-gris);
+  font-size: 0.85rem;
+}
+
+.comment-text {
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.comment-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comment-date {
+  color: var(--institucional-gris);
+  font-size: 0.8rem;
+}
+
+/* Estado cuando no hay comentarios */
+.no-comments {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--institucional-gris);
+}
+
+.no-comments-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.no-comments-subtitle {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+}
+
+/* Animación para nuevos comentarios */
+.comment-item.new-comment {
+  animation: commentSlideIn 0.6s ease-out forwards;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-left: 4px solid var(--institucional-azul);
+  opacity: 0;
+  transform: translateX(-50px);
+}
+
+.comment-item.comment-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@keyframes commentSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Formulario de comentarios mejorado */
+#comment-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-top: 2rem;
+}
+
+#comment-form h4 {
+  color: var(--institucional-azul);
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+}
+
+#comment-content {
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  min-height: 120px;
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+}
+
+#comment-content:focus {
+  border-color: var(--institucional-azul);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+/* Botón de comentario mejorado */
+#comment-form button[type="submit"] {
+  background: linear-gradient(135deg, var(--institucional-azul), var(--institucional-azul-claro));
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+  margin-top: 1rem;
+}
+
+#comment-form button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
+}
+
+#comment-form button[type="submit"]:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Contador de caracteres */
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--institucional-gris);
+  margin-top: 0.25rem;
+}
+
+.char-count.warning {
+  color: var(--warning);
+}
+
+.char-count.error {
+  color: var(--danger);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .comments-section {
+    padding: 1.5rem;
+  }
+  
+  .comment-item {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .comment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+  
+  .comment-avatar {
+    align-self: flex-start;
+  }
+  
+  #comment-form {
+    padding: 1.5rem;
+  }
 }
 
 /* Footer */

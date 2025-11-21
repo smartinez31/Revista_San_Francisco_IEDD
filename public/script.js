@@ -21,6 +21,12 @@ function getApiBaseUrl() {
 const API_BASE_URL = getApiBaseUrl();
 console.log('🔗 Conectando a API:', API_BASE_URL);
 
+// EN script.js - AL INICIO, después de API_BASE_URL
+// ⭐⭐ CORREGIR ESTO - VERSIÓN MEJORADA ⭐⭐
+const IMAGE_BASE_URL = 'http://localhost:10000'; // SIEMPRE usar el puerto del backend
+
+console.log('🌐 Image Base URL:', IMAGE_BASE_URL);
+
 // Función mejorada para llamadas a la API
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -533,6 +539,7 @@ function filterLocalArticles() {
 }
 
 // Renderizar artículos filtrados
+// ⭐⭐ SI EXISTE renderFilteredArticles(), CORREGIRLA ⭐⭐
 function renderFilteredArticles(articles) {
     const articlesGrid = document.getElementById('articles-grid');
     let articlesHTML = '';
@@ -544,18 +551,22 @@ function renderFilteredArticles(articles) {
             const statusClass = `article-status status-${article.status}`;
             const statusText = getStatusText(article.status);
             
+            // ⭐⭐ CORRECCIÓN: Usar IMAGE_BASE_URL ⭐⭐
+            const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
+            
             articlesHTML += `
                 <div class="article-card" onclick="showArticleDetail(${article.id})">
                     <div class="article-image">
-                        ${article.imageFile ? 
-                            `<img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}">` : 
+                        ${imageUrl ? 
+                            `<img src="${imageUrl}" alt="${article.title}" 
+                                  style="width:100%; height:100%; object-fit:cover;">` : 
                             getCategoryIcon(article.category)
                         }
                     </div>
                     <div class="article-content">
                         <h3 class="article-title">${article.title}</h3>
                         <div class="article-meta">
-                            <span>Por: ${article.author || article.author_name}</span>
+                            <span>Por: ${article.author_name || article.author}</span>
                             <span>${formatDate(article.created_at || article.createdAt)}</span>
                         </div>
                         <div class="article-excerpt">${article.content.substring(0, 100)}...</div>
@@ -981,24 +992,28 @@ function loadPublicMagazine() {
     loadPublicPosicionamiento();
 }
 
-// Load public portafolios
+// ⭐⭐ CORREGIR loadPublicPortafolios() ⭐⭐
+// ⭐⭐ FUNCIONES COMPLETAMENTE CORREGIDAS ⭐⭐
+
+// ⭐⭐ REEMPLAZA COMPLETAMENTE loadPublicPortafolios() ⭐⭐
 function loadPublicPortafolios() {
     const grid = document.getElementById('public-portafolios-grid');
-    const portafolios = state.articles.filter(a => 
-        a.chapter === 'portafolios' && a.status === 'published'
-    );
+    const portafolios = state.articles.filter(a => a.chapter === 'portafolios' && a.status === 'published');
     
-    console.log('📂 [PORTFOLIOS] Artículos encontrados:', portafolios.length);
-    console.log('📂 [PORTFOLIOS] Detalles:', portafolios.map(p => ({ id: p.id, title: p.title })));
+    console.log('🖼️ [PORTFOLIOS] Artículos con IMAGE_BASE_URL:', IMAGE_BASE_URL);
     
     let html = '';
     portafolios.forEach(article => {
+        // ⭐⭐ USAR SIEMPRE IMAGE_BASE_URL ⭐⭐
+        const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
+        
         html += `
             <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
                 <div class="article-image">
-                    ${article.image_url ? 
-                        `<img src="${article.image_url}" alt="${article.title}">` : 
-                        getCategoryIcon(article.category)
+                    ${imageUrl ? 
+                        `<img src="${imageUrl}" alt="${article.title}" 
+                              style="width:100%; height:100%; object-fit:cover; display:block;">` : 
+                        `<div class="article-icon">${getCategoryIcon(article.category)}</div>`
                     }
                 </div>
                 <div class="article-content">
@@ -1017,111 +1032,92 @@ function loadPublicPortafolios() {
     });
     
     grid.innerHTML = html || '<p class="no-content">No hay portafolios publicados aún.</p>';
-    console.log('🖼️ [PORTFOLIOS] HTML generado:', html ? 'SÍ' : 'NO');
 }
 
-// Load public experiencias
-// Load public experiencias
+// ⭐⭐ REEMPLAZA COMPLETAMENTE loadPublicExperiencias() ⭐⭐
 function loadPublicExperiencias() {
     const grid = document.getElementById('public-experiencias-grid');
-    const experiencias = state.articles.filter(a => 
-        a.chapter === 'experiencias' && a.status === 'published'
-    );
-    
-    console.log('📚 [EXPERIENCIAS] Artículos encontrados:', experiencias.length);
-    console.log('📚 [EXPERIENCIAS] Detalles:', experiencias.map(e => ({ id: e.id, title: e.title })));
+    const experiencias = state.articles.filter(a => a.chapter === 'experiencias' && a.status === 'published');
     
     let html = '';
-    
-    // ⭐⭐ VERIFICAR QUE HAY ARTÍCULOS ANTES DE ITERAR ⭐⭐
-    if (experiencias.length === 0) {
-        html = '<p class="no-content">No hay experiencias pedagógicas publicadas aún.</p>';
-    } else {
-        experiencias.forEach(article => {
-            // ⭐⭐ VERIFICAR QUE article.content EXISTA ⭐⭐
-            const content = article.content || '';
-            const excerpt = content.substring(0, 120) + (content.length > 120 ? '...' : '');
-            
-            html += `
-                <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
-                    <div class="article-image">
-                        ${article.image_url ? 
-                            `<img src="${article.image_url}" alt="${article.title}">` : 
-                            getCategoryIcon(article.category)
-                        }
+    experiencias.forEach(article => {
+        // ⭐⭐ USAR SIEMPRE IMAGE_BASE_URL ⭐⭐
+        const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
+        const content = article.content || '';
+        const excerpt = content.substring(0, 120) + (content.length > 120 ? '...' : '');
+        
+        html += `
+            <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
+                <div class="article-image">
+                    ${imageUrl ? 
+                        `<img src="${imageUrl}" alt="${article.title}" 
+                              style="width:100%; height:100%; object-fit:cover; display:block;">` : 
+                        `<div class="article-icon">${getCategoryIcon(article.category)}</div>`
+                    }
+                </div>
+                <div class="article-content">
+                    <h3 class="article-title">${article.title}</h3>
+                    <div class="article-meta">
+                        <span>Por: ${article.author_name || article.author}</span>
+                        <span>${formatDate(article.created_at || article.createdAt)}</span>
                     </div>
-                    <div class="article-content">
-                        <h3 class="article-title">${article.title}</h3>
-                        <div class="article-meta">
-                            <span>Por: ${article.author_name || article.author}</span>
-                            <span>${formatDate(article.created_at || article.createdAt)}</span>
-                        </div>
-                        <div class="article-excerpt">${excerpt}</div>
-                        <div class="article-meta">
-                            <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
-                        </div>
+                    <div class="article-excerpt">${excerpt}</div>
+                    <div class="article-meta">
+                        <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
                     </div>
                 </div>
-            `;
-        });
-    }
+            </div>
+        `;
+    });
     
-    grid.innerHTML = html;
-    console.log('🖼️ [EXPERIENCIAS] HTML generado:', html ? 'SÍ' : 'NO');
+    grid.innerHTML = html || '<p class="no-content">No hay experiencias pedagógicas publicadas aún.</p>';
 }
 
-// Load public posicionamiento
-// Load public posicionamiento
+// ⭐⭐ REEMPLAZA COMPLETAMENTE loadPublicPosicionamiento() ⭐⭐
 function loadPublicPosicionamiento() {
     const grid = document.getElementById('public-posicionamiento-grid');
-    const posicionamientos = state.articles.filter(a => 
-        a.chapter === 'posicionamiento' && a.status === 'published'
-    );
-    
-    console.log('💭 [POSICIONAMIENTO] Artículos encontrados:', posicionamientos.length);
+    const posicionamientos = state.articles.filter(a => a.chapter === 'posicionamiento' && a.status === 'published');
     
     let html = '';
-    
-    // ⭐⭐ VERIFICAR QUE HAY ARTÍCULOS ⭐⭐
-    if (posicionamientos.length === 0) {
-        html = '<p class="no-content">No hay reflexiones críticas publicadas aún.</p>';
-    } else {
-        posicionamientos.forEach(article => {
-            // ⭐⭐ VERIFICAR QUE article.content EXISTA ⭐⭐
-            const content = article.content || '';
-            const excerpt = content.substring(0, 120) + (content.length > 120 ? '...' : '');
-            
-            html += `
-                <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
-                    <div class="article-image">
-                        ${article.image_url ? 
-                            `<img src="${article.image_url}" alt="${article.title}">` : 
-                            getCategoryIcon(article.category)
-                        }
+    posicionamientos.forEach(article => {
+        // ⭐⭐ USAR SIEMPRE IMAGE_BASE_URL ⭐⭐
+        const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
+        const content = article.content || '';
+        const excerpt = content.substring(0, 120) + (content.length > 120 ? '...' : '');
+        
+        html += `
+            <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
+                <div class="article-image">
+                    ${imageUrl ? 
+                        `<img src="${imageUrl}" alt="${article.title}" 
+                              style="width:100%; height:100%; object-fit:cover; display:block;">` : 
+                        `<div class="article-icon">${getCategoryIcon(article.category)}</div>`
+                    }
+                </div>
+                <div class="article-content">
+                    <h3 class="article-title">${article.title}</h3>
+                    <div class="article-meta">
+                        <span>Por: ${article.author_name || article.author}</span>
+                        <span>${formatDate(article.created_at || article.createdAt)}</span>
                     </div>
-                    <div class="article-content">
-                        <h3 class="article-title">${article.title}</h3>
-                        <div class="article-meta">
-                            <span>Por: ${article.author_name || article.author}</span>
-                            <span>${formatDate(article.created_at || article.createdAt)}</span>
-                        </div>
-                        <div class="article-excerpt">${excerpt}</div>
-                        <div class="article-meta">
-                            <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
-                        </div>
+                    <div class="article-excerpt">${excerpt}</div>
+                    <div class="article-meta">
+                        <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
                     </div>
                 </div>
-            `;
-        });
-    }
+            </div>
+        `;
+    });
     
-    grid.innerHTML = html;
-    console.log('🖼️ [POSICIONAMIENTO] HTML generado:', html ? 'SÍ' : 'NO');
+    grid.innerHTML = html || '<p class="no-content">No hay reflexiones críticas publicadas aún.</p>';
 }
 // Show public article detail - IMPROVED VERSION
 function showPublicArticleDetail(articleId) {
     const article = state.articles.find(a => a.id === articleId && a.status === 'published');
     if (!article) return;
+    
+    // ⭐⭐ CORRECCIÓN: Usar image_url de la BD en lugar de imageFile ⭐⭐
+    const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
     
     // Create modal for public article viewing
     const modalHTML = `
@@ -1133,26 +1129,27 @@ function showPublicArticleDetail(articleId) {
                 </div>
                 <div class="modal-body">
                     <div class="article-meta">
-                        <span><strong>Autor:</strong> ${article.author}</span>
-                        <span><strong>Fecha:</strong> ${formatDate(article.createdAt)}</span>
+                        <span><strong>Autor:</strong> ${article.author_name || article.author}</span>
+                        <span><strong>Fecha:</strong> ${formatDate(article.created_at || article.createdAt)}</span>
                         <span><strong>Categoría:</strong> ${getCategoryName(article.category)}</span>
                         <span><strong>Capítulo:</strong> ${getChapterName(article.chapter)}</span>
                     </div>
-                    ${article.imageFile ? `
+                    ${imageUrl ? `
                         <div class="article-image-modal">
-                            <img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}">
+                            <img src="${imageUrl}" alt="${article.title}" 
+                                 style="max-width:100%; height:auto; border-radius:8px;">
                         </div>
                     ` : ''}
                     <div class="article-content-full">
                         ${article.content.replace(/\n/g, '<br>')}
                     </div>
                     <div class="comments-section">
-                        <h3>💬 Comentarios <span class="article-status">${article.comments.length}</span></h3>
-                        ${article.comments.length > 0 ? article.comments.map(comment => `
+                        <h3>💬 Comentarios <span class="article-status">${article.comments?.length || 0}</span></h3>
+                        ${article.comments && article.comments.length > 0 ? article.comments.map(comment => `
                             <div class="notification">
                                 <h4>${comment.author}</h4>
                                 <p>${comment.content}</p>
-                                <small>${formatDate(comment.createdAt)}</small>
+                                <small>${formatDate(comment.created_at || comment.createdAt)}</small>
                             </div>
                         `).join('') : '<p class="no-content">No hay comentarios aún.</p>'}
                     </div>
@@ -1707,6 +1704,7 @@ async function createNotification(userId, title, content, type = 'info', link = 
 }
 
 // Load articles
+// ⭐⭐ CORREGIR loadArticles() - PARA USUARIOS LOGUEADOS ⭐⭐
 function loadArticles() {
     const articlesGrid = document.getElementById('articles-grid');
     let articlesHTML = '';
@@ -1715,7 +1713,7 @@ function loadArticles() {
     
     // Filter based on user role
     if (state.currentUser.role === 'student') {
-        articlesToShow = articlesToShow.filter(a => a.authorId === state.currentUser.id);
+        articlesToShow = articlesToShow.filter(a => a.author_id === state.currentUser.id);
     } else if (state.currentUser.role === 'parent') {
         articlesToShow = articlesToShow.filter(a => a.status === 'published');
     }
@@ -1737,6 +1735,8 @@ function loadArticles() {
         articlesToShow = articlesToShow.filter(a => a.chapter === chapterFilter);
     }
     
+    console.log('🖼️ [ARTICLES] Cargando artículos para dashboard. IMAGE_BASE_URL:', IMAGE_BASE_URL);
+    
     if (articlesToShow.length === 0) {
         articlesHTML = '<div class="no-content"><p>No se encontraron artículos.</p></div>';
     } else {
@@ -1744,28 +1744,35 @@ function loadArticles() {
             const statusClass = `article-status status-${article.status}`;
             const statusText = getStatusText(article.status);
             
+            // ⭐⭐ CORRECCIÓN: Usar IMAGE_BASE_URL para las imágenes ⭐⭐
+            const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
+            
             articlesHTML += `
                 <div class="article-card" onclick="showArticleDetail(${article.id})">
                     <div class="article-image">
-                        ${article.imageFile ? 
-                            `<img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}">` : 
+                        ${imageUrl ? 
+                            `<img src="${imageUrl}" alt="${article.title}" 
+                                  style="width:100%; height:100%; object-fit:cover;">` : 
                             getCategoryIcon(article.category)
                         }
                     </div>
                     <div class="article-content">
                         <h3 class="article-title">${article.title}</h3>
                         <div class="article-meta">
-                            <span>Por: ${article.author}</span>
-                            <span>${formatDate(article.createdAt)}</span>
+                            <span>Por: ${article.author_name || article.author}</span>
+                            <span>${formatDate(article.created_at || article.createdAt)}</span>
                         </div>
                         <div class="article-excerpt">${article.content.substring(0, 100)}...</div>
                         <div class="article-meta">
                             <span>${getCategoryName(article.category)} • ${getChapterName(article.chapter)}</span>
                             <span class="${statusClass}">${statusText}</span>
                         </div>
-                        ${article.authorId === state.currentUser.id && article.status !== 'published' ? 
+                        ${article.author_id === state.currentUser?.id && article.status !== 'published' ? 
                           `<div class="action-buttons">
                               <button onclick="event.stopPropagation(); editArticle(${article.id})">✏️ Editar</button>
+                           </div>` : ''}
+                        ${state.currentUser?.role === 'admin' ? 
+                          `<div class="action-buttons">
                               <button class="btn-danger" onclick="event.stopPropagation(); deleteArticle(${article.id})">🗑️ Eliminar</button>
                            </div>` : ''}
                     </div>
@@ -2064,6 +2071,7 @@ function validateForm(formData) {
 }
 
 // Load pending articles (for teachers/admins)
+// ⭐⭐ CORREGIR loadPendingArticles() - PARA REVISIÓN ⭐⭐
 function loadPendingArticles() {
     const pendingGrid = document.getElementById('pending-articles-grid');
     let articlesHTML = '';
@@ -2071,36 +2079,42 @@ function loadPendingArticles() {
     const pendingArticles = state.articles.filter(a => a.status === 'pending');
     const thisWeek = new Date();
     thisWeek.setDate(thisWeek.getDate() - 7);
-    const pendingThisWeek = pendingArticles.filter(a => new Date(a.createdAt) >= thisWeek);
+    const pendingThisWeek = pendingArticles.filter(a => new Date(a.created_at || a.createdAt) >= thisWeek);
     
     const urgentDate = new Date();
     urgentDate.setDate(urgentDate.getDate() - 7);
-    const pendingUrgent = pendingArticles.filter(a => new Date(a.createdAt) <= urgentDate);
+    const pendingUrgent = pendingArticles.filter(a => new Date(a.created_at || a.createdAt) <= urgentDate);
     
     document.getElementById('total-pending').textContent = pendingArticles.length;
     document.getElementById('pending-this-week').textContent = pendingThisWeek.length;
     document.getElementById('pending-urgent').textContent = pendingUrgent.length;
     
+    console.log('🖼️ [PENDING] Cargando artículos pendientes. IMAGE_BASE_URL:', IMAGE_BASE_URL);
+    
     if (pendingArticles.length === 0) {
         articlesHTML = '<div class="no-content"><p>No hay artículos pendientes de revisión.</p></div>';
     } else {
         pendingArticles.forEach(article => {
-            const isUrgent = new Date(article.createdAt) <= urgentDate;
+            const isUrgent = new Date(article.created_at || article.createdAt) <= urgentDate;
             const urgentClass = isUrgent ? 'style="border-left: 4px solid var(--danger)"' : '';
+            
+            // ⭐⭐ CORRECCIÓN: Usar IMAGE_BASE_URL para las imágenes ⭐⭐
+            const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
             
             articlesHTML += `
                 <div class="article-card" ${urgentClass}>
                     <div class="article-image">
-                        ${article.imageFile ? 
-                            `<img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}">` : 
+                        ${imageUrl ? 
+                            `<img src="${imageUrl}" alt="${article.title}" 
+                                  style="width:100%; height:100%; object-fit:cover;">` : 
                             getCategoryIcon(article.category)
                         }
                     </div>
                     <div class="article-content">
                         <h3 class="article-title">${article.title}</h3>
                         <div class="article-meta">
-                            <span>Por: ${article.author}</span>
-                            <span>${formatDate(article.createdAt)}</span>
+                            <span>Por: ${article.author_name || article.author}</span>
+                            <span>${formatDate(article.created_at || article.createdAt)}</span>
                             ${isUrgent ? '<span style="color: var(--danger)">⚠️ Urgente</span>' : ''}
                         </div>
                         <div class="article-excerpt">${article.content.substring(0, 100)}...</div>
@@ -2120,70 +2134,181 @@ function loadPendingArticles() {
             `;
         });
     }
-    
+
     pendingGrid.innerHTML = articlesHTML;
 }
 
 // Approve article
-function approveArticle(articleId) {
-    const index = state.articles.findIndex(a => a.id === articleId);
-    if (index !== -1) {
-        state.articles[index].status = 'published';
-        state.articles[index].publishedAt = new Date().toISOString().split('T')[0];
+// ⭐⭐ CORREGIR approveArticle() - CON SINCRONIZACIÓN CON LA BD ⭐⭐
+async function approveArticle(articleId) {
+    try {
+        console.log('✅ [APPROVE] Aprobando artículo:', articleId);
         
-        // Add notification for the author
-        state.notifications.unshift({
-            id: state.notifications.length > 0 ? Math.max(...state.notifications.map(n => n.id)) + 1 : 1,
-            title: '🎉 Artículo aprobado',
-            content: `Tu artículo "${state.articles[index].title}" ha sido publicado en la revista`,
-            type: 'success',
-            read: false,
-            createdAt: new Date().toISOString().split('T')[0],
-            link: 'articles-page'
+        const article = state.articles.find(a => a.id === articleId);
+        if (!article) {
+            alert('❌ Artículo no encontrado');
+            return;
+        }
+
+        // ⭐⭐ ACTUALIZAR EN LA BASE DE DATOS PRIMERO ⭐⭐
+        const response = await fetch(`${API_BASE_URL}/articles/${articleId}/approve`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'user-role': state.currentUser.role,
+                'user-id': state.currentUser.id.toString()
+            }
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error aprobando artículo');
+        }
+
+        const data = await response.json();
         
-        saveDataToStorage();
-        loadPendingArticles();
-        updateDashboard();
-        alert('✅ Artículo aprobado y publicado exitosamente.');
+        if (data.success) {
+            // ⭐⭐ ACTUALIZAR ESTADO LOCAL CON LOS DATOS DE LA BD ⭐⭐
+            article.status = 'published';
+            article.published_at = new Date().toISOString();
+            
+            // Guardar en localStorage
+            saveDataToStorage();
+            
+            // Recargar la vista
+            if (state.currentPage === 'pending-articles-page') {
+                loadPendingArticles();
+            } else {
+                loadArticles();
+            }
+            
+            updateDashboard();
+            
+            // Notificación
+            state.notifications.unshift({
+                id: state.notifications.length > 0 ? Math.max(...state.notifications.map(n => n.id)) + 1 : 1,
+                title: '🎉 Artículo aprobado',
+                content: `El artículo "${article.title}" ha sido publicado en la revista`,
+                type: 'success',
+                read: false,
+                createdAt: new Date().toISOString().split('T')[0],
+                link: 'articles-page'
+            });
+            
+            saveDataToStorage();
+            
+            alert('✅ Artículo aprobado y publicado exitosamente.');
+            
+        } else {
+            throw new Error(data.error || 'Error desconocido');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error aprobando artículo:', error);
+        
+        // Fallback: solo actualizar localmente si falla la conexión
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            const confirmOffline = confirm(
+                '❌ Error de conexión. ¿Desea aprobar el artículo localmente? Se sincronizará cuando haya conexión.'
+            );
+            
+            if (confirmOffline) {
+                const article = state.articles.find(a => a.id === articleId);
+                if (article) {
+                    article.status = 'published';
+                    article.publishedAt = new Date().toISOString().split('T')[0];
+                    saveDataToStorage();
+                    
+                    if (state.currentPage === 'pending-articles-page') {
+                        loadPendingArticles();
+                    } else {
+                        loadArticles();
+                    }
+                    
+                    alert('⚠️ Artículo aprobado localmente. Se sincronizará cuando haya conexión.');
+                }
+            }
+        } else {
+            alert('❌ Error aprobando artículo: ' + error.message);
+        }
     }
 }
 
 // Reject article
-function rejectArticle(articleId) {
-    const article = state.articles.find(a => a.id === articleId);
-    if (article) {
+// ⭐⭐ CORREGIR rejectArticle() - CON SINCRONIZACIÓN CON LA BD ⭐⭐
+async function rejectArticle(articleId) {
+    try {
+        const article = state.articles.find(a => a.id === articleId);
+        if (!article) return;
+
         const reason = prompt('Por favor, ingrese el motivo del rechazo:');
-        if (reason === null) return; // User cancelled
-        
+        if (reason === null) return;
+
         if (!reason.trim()) {
             alert('Debe ingresar un motivo para rechazar el artículo.');
             return;
         }
-        
-        article.status = 'rejected';
-        article.rejectionReason = reason;
-        
-        // Add notification for the author
-        state.notifications.unshift({
-            id: state.notifications.length > 0 ? Math.max(...state.notifications.map(n => n.id)) + 1 : 1,
-            title: '📝 Artículo requiere cambios',
-            content: `Tu artículo "${article.title}" fue rechazado. Motivo: ${reason}`,
-            type: 'danger',
-            read: false,
-            createdAt: new Date().toISOString().split('T')[0],
-            link: 'articles-page'
+
+        // ⭐⭐ ACTUALIZAR EN LA BASE DE DATOS ⭐⭐
+        const response = await fetch(`${API_BASE_URL}/articles/${articleId}/reject`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'user-role': state.currentUser.role,
+                'user-id': state.currentUser.id.toString()
+            },
+            body: JSON.stringify({ rejection_reason: reason })
         });
+
+        if (!response.ok) {
+            throw new Error('Error rechazando artículo');
+        }
+
+        const data = await response.json();
         
-        saveDataToStorage();
-        loadPendingArticles();
-        updateDashboard();
-        alert('✅ Artículo rechazado. El autor ha sido notificado.');
+        if (data.success) {
+            // Actualizar estado local
+            article.status = 'rejected';
+            article.rejectionReason = reason;
+            
+            saveDataToStorage();
+            
+            // Recargar vista
+            if (state.currentPage === 'pending-articles-page') {
+                loadPendingArticles();
+            }
+            
+            updateDashboard();
+            
+            alert('✅ Artículo rechazado. El autor ha sido notificado.');
+            
+        } else {
+            throw new Error(data.error || 'Error desconocido');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error rechazando artículo:', error);
+        
+        // Fallback local
+        const confirmOffline = confirm(
+            '❌ Error de conexión. ¿Desea rechazar el artículo localmente?'
+        );
+        
+        if (confirmOffline) {
+            const article = state.articles.find(a => a.id === articleId);
+            if (article) {
+                article.status = 'rejected';
+                article.rejectionReason = reason;
+                saveDataToStorage();
+                loadPendingArticles();
+                alert('⚠️ Artículo rechazado localmente.');
+            }
+        } else {
+            alert('❌ Error rechazando artículo: ' + error.message);
+        }
     }
 }
-
-// Show article detail
-// Show article detail
+// ⭐⭐ CORREGIR showArticleDetail() ⭐⭐
 function showArticleDetail(articleId) {
     const article = state.articles.find(a => a.id === articleId);
     if (!article) {
@@ -2230,7 +2355,9 @@ function showArticleDetail(articleId) {
         `;
     }
     
-    // ⭐⭐ VERIFICAR QUE article.comments EXISTA ⭐⭐
+    // ⭐⭐ CORRECCIÓN: Usar IMAGE_BASE_URL para la imagen ⭐⭐
+    const imageUrl = article.image_url ? `${IMAGE_BASE_URL}${article.image_url}` : null;
+    
     const comments = article.comments || [];
     
     articleDetail.innerHTML = `
@@ -2243,8 +2370,8 @@ function showArticleDetail(articleId) {
                 <span class="${statusClass}">${statusText}</span>
             </div>
             ${rejectionHTML}
-            ${article.image_url ? `<div style="margin: 1rem 0; text-align: center;">
-                <img src="${article.image_url}" alt="${article.title}" style="max-width:100%; height:auto; border-radius: 8px;">
+            ${imageUrl ? `<div style="margin: 1rem 0; text-align: center;">
+                <img src="${imageUrl}" alt="${article.title}" style="max-width:100%; height:auto; border-radius: 8px;">
             </div>` : ''}
             <div style="margin: 1rem 0; line-height: 1.8; white-space: pre-line;">${article.content}</div>
             ${actionsHTML}
@@ -2252,8 +2379,6 @@ function showArticleDetail(articleId) {
     `;
     
     document.getElementById('comment-article-id').value = articleId;
-    
-    // ⭐⭐ USAR LA VARIABLE comments EN LUGAR DE article.comments ⭐⭐
     document.getElementById('comments-count-badge').textContent = `(${comments.length})`;
     
     loadComments(articleId);
@@ -2373,6 +2498,7 @@ function reloadCurrentView() {
 }
 
 // Load comments for an article
+// ⭐⭐ ACTUALIZAR loadComments() CON NUEVO ESTILO ⭐⭐
 function loadComments(articleId) {
     const article = state.articles.find(a => a.id === articleId);
     if (!article) {
@@ -2386,35 +2512,55 @@ function loadComments(articleId) {
         return;
     }
     
-    // ⭐⭐ VERIFICAR QUE article.comments EXISTA ⭐⭐
     const comments = article.comments || [];
     
     let commentsHTML = '';
     
     if (comments.length === 0) {
-        commentsHTML = '<div class="no-content"><p>No hay comentarios aún. ¡Sé el primero en comentar!</p></div>';
+        commentsHTML = `
+            <div class="no-comments">
+                <div class="no-comments-icon">💬</div>
+                <p>No hay comentarios aún.</p>
+                <p class="no-comments-subtitle">¡Sé el primero en comentar!</p>
+            </div>
+        `;
     } else {
-        comments.forEach(comment => {
-            // ⭐⭐ VERIFICAR PROPIEDADES DEL COMENTARIO ⭐⭐
+        // Ordenar comentarios: más recientes primero
+        const sortedComments = [...comments].sort((a, b) => 
+            new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)
+        );
+        
+        sortedComments.forEach(comment => {
             const author = comment.author || 'Anónimo';
             const content = comment.content || '';
             const createdAt = comment.created_at || comment.createdAt || 'Fecha desconocida';
             
             commentsHTML += `
-                <div class="notification">
-                    <h4>${author}</h4>
-                    <p>${content}</p>
-                    <small>${formatDate(createdAt)}</small>
+                <div class="comment-item">
+                    <div class="comment-avatar">
+                        ${author.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="comment-content">
+                        <div class="comment-header">
+                            <strong class="comment-author">${author}</strong>
+                            <span class="comment-time">${getRelativeTime(createdAt)}</span>
+                        </div>
+                        <div class="comment-text">${content}</div>
+                        <div class="comment-meta">
+                            <span class="comment-date">${formatDate(createdAt)}</span>
+                        </div>
+                    </div>
                 </div>
             `;
         });
     }
     
     commentsList.innerHTML = commentsHTML;
-    console.log('💬 Comentarios cargados:', comments.length);
+    console.log('💬 Comentarios cargados con nuevo estilo:', comments.length);
 }
 
 // Add comment to an article
+// ⭐⭐ FUNCIÓN MEJORADA CON ANIMACIONES - REEMPLAZA LA ACTUAL ⭐⭐
 async function addComment(e) {
     e.preventDefault();
     
@@ -2424,7 +2570,7 @@ async function addComment(e) {
     }
     
     const articleId = parseInt(document.getElementById('comment-article-id').value);
-    const content = document.getElementById('comment-content').value;
+    const content = document.getElementById('comment-content').value.trim();
     
     const article = state.articles.find(a => a.id === articleId);
     if (!article) {
@@ -2441,6 +2587,12 @@ async function addComment(e) {
         alert('❌ El comentario no puede tener más de 500 caracteres.');
         return;
     }
+
+    // ⭐⭐ ANIMACIÓN DE ENVÍO - NUEVO ⭐⭐
+    const commentBtn = document.querySelector('#comment-form button[type="submit"]');
+    const originalText = commentBtn.textContent;
+    commentBtn.textContent = '⏳ Enviando...';
+    commentBtn.disabled = true;
 
     try {
         console.log('💬 [FRONTEND] Enviando comentario a la API...');
@@ -2464,48 +2616,81 @@ async function addComment(e) {
         if (response.ok) {
             console.log('✅ [FRONTEND] Comentario guardado en BD:', data.comment);
             
+            // ⭐⭐ ANIMACIÓN DE ÉXITO - NUEVO ⭐⭐
+            commentBtn.textContent = '✅ ¡Enviado!';
+            commentBtn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+            
             // Actualizar también en localStorage como respaldo
             const newComment = {
                 id: data.comment.id,
                 author: state.currentUser.name,
+                author_id: state.currentUser.id,
                 content: content,
-                createdAt: new Date().toISOString().split('T')[0]
+                created_at: new Date().toISOString().split('T')[0]
             };
             
-            article.comments.push(newComment);
+            if (!article.comments) article.comments = [];
+            article.comments.unshift(newComment); // Agregar al inicio
+            
+            // ⭐⭐ ANIMACIÓN: Mostrar comentario nuevo con efecto - NUEVO ⭐⭐
+            displayNewCommentWithAnimation(newComment);
+            
+            // Limpiar formulario
             document.getElementById('comment-content').value = '';
             document.getElementById('comment-char-count').textContent = '0/500 caracteres';
             
             saveDataToStorage();
-            loadComments(articleId);
             updateDashboard();
             
             // Update comments count badge
             document.getElementById('comments-count-badge').textContent = `(${article.comments.length})`;
             
+            // ⭐⭐ NOTIFICACIÓN DE ÉXITO - NUEVO ⭐⭐
+            showCommentSuccessNotification();
+            
             // Add notification for the article author if it's not the current user
-            if (article.authorId !== state.currentUser.id) {
+            if (article.author_id !== state.currentUser.id) {
                 state.notifications.unshift({
                     id: state.notifications.length > 0 ? Math.max(...state.notifications.map(n => n.id)) + 1 : 1,
                     title: '💬 Nuevo comentario',
                     content: `Tu artículo "${article.title}" tiene un nuevo comentario`,
                     type: 'info',
                     read: false,
-                    createdAt: new Date().toISOString().split('T')[0],
+                    created_at: new Date().toISOString().split('T')[0],
                     link: 'article-detail-page'
                 });
                 saveDataToStorage();
             }
             
-            alert('✅ Comentario publicado exitosamente en la base de datos.');
+            // ⭐⭐ RESTAURAR BOTÓN DESPUÉS DE 2 SEGUNDOS - NUEVO ⭐⭐
+            setTimeout(() => {
+                commentBtn.textContent = originalText;
+                commentBtn.style.background = '';
+                commentBtn.disabled = false;
+            }, 2000);
             
         } else {
             console.error('❌ [FRONTEND] Error del servidor:', data);
+            
+            // ⭐⭐ ANIMACIÓN DE ERROR - NUEVO ⭐⭐
+            commentBtn.textContent = '❌ Error';
+            commentBtn.style.background = 'linear-gradient(135deg, #ef4444, #f87171)';
+            
+            setTimeout(() => {
+                commentBtn.textContent = originalText;
+                commentBtn.style.background = '';
+                commentBtn.disabled = false;
+            }, 2000);
+            
             alert('❌ Error publicando comentario: ' + (data.error || 'Error desconocido'));
         }
         
     } catch (error) {
         console.error('💥 [FRONTEND] Error de conexión:', error);
+        
+        // ⭐⭐ ANIMACIÓN DE ERROR - NUEVO ⭐⭐
+        commentBtn.textContent = '❌ Error';
+        commentBtn.style.background = 'linear-gradient(135deg, #ef4444, #f87171)';
         
         // FALLBACK: Guardar solo en localStorage si falla la conexión
         console.log('📱 [FRONTEND] Guardando comentario localmente...');
@@ -2513,22 +2698,149 @@ async function addComment(e) {
         const newComment = {
             id: article.comments.length > 0 ? Math.max(...article.comments.map(c => c.id)) + 1 : 1,
             author: state.currentUser.name,
+            author_id: state.currentUser.id,
             content: content,
-            createdAt: new Date().toISOString().split('T')[0]
+            created_at: new Date().toISOString().split('T')[0]
         };
         
-        article.comments.push(newComment);
+        if (!article.comments) article.comments = [];
+        article.comments.unshift(newComment);
+        
+        // ⭐⭐ ANIMACIÓN: Mostrar comentario nuevo con efecto - NUEVO ⭐⭐
+        displayNewCommentWithAnimation(newComment);
+        
         document.getElementById('comment-content').value = '';
         document.getElementById('comment-char-count').textContent = '0/500 caracteres';
         
         saveDataToStorage();
-        loadComments(articleId);
         updateDashboard();
         
         document.getElementById('comments-count-badge').textContent = `(${article.comments.length})`;
         
+        // ⭐⭐ NOTIFICACIÓN DE ÉXITO (modo offline) - NUEVO ⭐⭐
+        showCommentSuccessNotification();
+        
+        // Restaurar botón después de 2 segundos
+        setTimeout(() => {
+            commentBtn.textContent = originalText;
+            commentBtn.style.background = '';
+            commentBtn.disabled = false;
+        }, 2000);
+        
         alert('⚠️ Comentario guardado localmente (modo offline). Se sincronizará cuando haya conexión.');
     }
+}
+
+// ⭐⭐ AGREGAR ESTAS FUNCIONES AUXILIARES - NUEVAS ⭐⭐
+
+// FUNCIÓN PARA MOSTRAR COMENTARIO CON ANIMACIÓN
+function displayNewCommentWithAnimation(comment) {
+    const commentsList = document.getElementById('comments-list');
+    
+    // Crear elemento de comentario con clases de animación
+    const commentHTML = `
+        <div class="comment-item new-comment">
+            <div class="comment-avatar">
+                ${comment.author.charAt(0).toUpperCase()}
+            </div>
+            <div class="comment-content">
+                <div class="comment-header">
+                    <strong class="comment-author">${comment.author}</strong>
+                    <span class="comment-time">Ahora mismo</span>
+                </div>
+                <div class="comment-text">${comment.content}</div>
+                <div class="comment-meta">
+                    <span class="comment-date">${formatDate(comment.created_at)}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Si no hay comentarios, crear la estructura
+    if (commentsList.querySelector('.no-content') || commentsList.querySelector('.no-comments')) {
+        commentsList.innerHTML = '';
+    }
+    
+    // Agregar al inicio con animación
+    commentsList.insertAdjacentHTML('afterbegin', commentHTML);
+    
+    // Animación de entrada
+    const newCommentElement = commentsList.querySelector('.new-comment');
+    if (newCommentElement) {
+        setTimeout(() => {
+            newCommentElement.classList.add('comment-visible');
+        }, 100);
+        
+        // Remover clase de animación después de 3 segundos
+        setTimeout(() => {
+            newCommentElement.classList.remove('new-comment', 'comment-visible');
+        }, 3000);
+    }
+}
+
+// FUNCIÓN PARA NOTIFICACIÓN DE ÉXITO
+function showCommentSuccessNotification() {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = 'comment-success-notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">💬</span>
+            <span class="notification-text">¡Comentario publicado exitosamente!</span>
+        </div>
+    `;
+    
+    // Estilos inline para la notificación
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        z-index: 10000;
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 300px;
+        border-left: 4px solid #047857;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animación de entrada
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
+    }, 100);
+    
+    // Animación de salida después de 3 segundos
+    setTimeout(() => {
+        notification.style.transform = 'translateX(400px)';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 3000);
+}
+
+// FUNCIÓN PARA TIEMPO RELATIVO (hace X tiempo)
+function getRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Ahora mismo';
+    if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
+    if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} h`;
+    if (diffInSeconds < 604800) return `Hace ${Math.floor(diffInSeconds / 86400)} d`;
+    
+    return formatDate(dateString);
 }
 //----------------------------------------------------------------------------------------------------------//
 // Load users (for admins)
