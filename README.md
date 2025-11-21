@@ -1,4 +1,3 @@
-# Revista Digital - Colegio San Francisco IED
 
 ## 🎯 Descripción
 Sistema de Revista Digital para el Programa Talentos y Capacidades Excepcionales del Colegio San Francisco IED.
