@@ -10,31 +10,6 @@ const { initializeDatabase } = require('./init-db');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// =============================================================================
-// CREAR CARPETA PUBLIC SI NO EXISTE - SOLUCIÓN TEMPORAL
-// =============================================================================
-const publicDir = path.join(__dirname, 'public');
-if (!fs.existsSync(publicDir)) {
-    console.log('📁 Creando carpeta public...');
-    fs.mkdirSync(publicDir, { recursive: true });
-    
-    // Crear un index.html básico temporal
-    const basicHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Revista Digital CSF</title>
-        </head>
-        <body>
-            <h1>Revista Digital CSF - Cargando...</h1>
-            <p>Si ves esto, la carpeta public no se desplegó correctamente.</p>
-        </body>
-        </html>
-    `;
-    fs.writeFileSync(path.join(publicDir, 'index.html'), basicHTML);
-    console.log('📄 index.html temporal creado');
-}
-
 // ==========================
 // CONFIGURACIÓN
 // ==========================
@@ -46,8 +21,6 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000'
 ];
-
-// ... el resto de tu código IGUAL como lo tienes
 
 // ✅ FUNCIÓN PARA GUARDAR IMÁGENES BASE64
 async function saveBase64Image(base64Data, title) {
@@ -144,31 +117,57 @@ app.get('/api/health', async (req, res) => {
 // ==========================
 // AUTENTICACIÓN
 // ==========================
+// En server.js - TEMPORAL para debug
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password, role } = req.body;
 
-        if (!username || !password || !role) {
-            return res.status(400).json({ error: "Todos los campos son requeridos" });
+        console.log('🔐 [LOGIN DEBUG] Datos recibidos:', { 
+            username, 
+            password, 
+            role,
+            passwordLength: password?.length 
+        });
+
+        // DEBUG: Verificar usuario específico con todos los detalles
+        const userCheck = await query(
+            'SELECT username, password, role, active, length(password) as pass_length FROM users WHERE username = $1',
+            [username]
+        );
+        
+        console.log('👤 [LOGIN DEBUG] Usuario encontrado:', userCheck.rows[0]);
+        
+        if (userCheck.rows.length > 0) {
+            const user = userCheck.rows[0];
+            console.log('🔑 [LOGIN DEBUG] Comparación de contraseñas:');
+            console.log('   - Contraseña recibida:', `"${password}"`, `(length: ${password?.length})`);
+            console.log('   - Contraseña en BD:', `"${user.password}"`, `(length: ${user.pass_length})`);
+            console.log('   - ¿Coinciden?', password === user.password);
         }
 
+        // Consulta original
         const result = await query(
             'SELECT id, username, name, role, talento, active FROM users WHERE username=$1 AND password=$2 AND role=$3 AND active=true',
             [username, password, role]
         );
 
+        console.log('📊 [LOGIN DEBUG] Resultado de la consulta:', result.rows);
+
         if (result.rows.length === 0) {
+            console.log('❌ [LOGIN DEBUG] No se encontró usuario con esos criterios');
             return res.status(401).json({ error: "Credenciales incorrectas" });
         }
 
         await query('UPDATE users SET last_login=CURRENT_TIMESTAMP WHERE id=$1', [result.rows[0].id]);
+        
+        console.log('✅ [LOGIN DEBUG] Login exitoso para:', result.rows[0].username);
         res.json({ user: result.rows[0] });
+        
     } catch (error) {
-        console.error('❌ Error en login:', error);
+        console.error('❌ [LOGIN DEBUG] Error en login:', error);
         res.status(500).json({ error: "Error de servidor durante el login" });
     }
 });
-
 // ==========================
 // ARTÍCULOS (VERSIÓN ÚNICA CORREGIDA)
 // ==========================
@@ -231,22 +230,33 @@ app.post('/api/articles', async (req, res) => {
         res.status(500).json({ error: "Error creando artículo: " + err.message });
     }
 });
-
 // OBTENER ARTÍCULOS
 app.get('/api/articles', async (req, res) => {
     try {
+        console.log('📚 [ARTICLES DEBUG] Solicitando todos los artículos...');
+        
         const result = await query(`
             SELECT a.*, u.name AS author_name
             FROM articles a LEFT JOIN users u ON a.author_id = u.id
             ORDER BY a.created_at DESC
         `);
+        
+        console.log('✅ [ARTICLES DEBUG] Artículos encontrados en BD:', result.rows.length);
+        console.log('📋 [ARTICLES DEBUG] Detalles:', 
+            result.rows.map(a => ({ 
+                id: a.id, 
+                title: a.title.substring(0, 30) + '...', 
+                status: a.status,
+                author: a.author_name 
+            }))
+        );
+        
         res.json({ success: true, articles: result.rows });
     } catch (err) {
         console.error('❌ Error obteniendo artículos:', err);
         res.status(500).json({ error: "Error obteniendo artículos" });
     }
 });
-
 // OBTENER ARTÍCULO POR ID
 app.get('/api/articles/:id', async (req, res) => {
     try {
@@ -264,6 +274,94 @@ app.get('/api/articles/:id', async (req, res) => {
     } catch (err) {
         console.error('❌ Error obteniendo artículo:', err);
         res.status(500).json({ error: "Error obteniendo artículo" });
+    }
+});
+// ==========================
+// NOTIFICACIONES
+// ==========================
+
+// Obtener notificaciones del usuario
+app.get('/api/notifications', async (req, res) => {
+    try {
+        const userId = req.query.user_id;
+        
+        if (!userId) {
+            return res.status(400).json({ error: "user_id es requerido" });
+        }
+
+        const result = await query(`
+            SELECT * FROM notifications 
+            WHERE user_id = $1 
+            ORDER BY created_at DESC
+            LIMIT 50
+        `, [userId]);
+
+        res.json({ success: true, notifications: result.rows });
+    } catch (err) {
+        console.error('❌ Error obteniendo notificaciones:', err);
+        res.status(500).json({ error: "Error obteniendo notificaciones" });
+    }
+});
+
+// Crear notificación
+app.post('/api/notifications', async (req, res) => {
+    try {
+        const { user_id, title, content, type, link } = req.body;
+
+        if (!user_id || !title || !content) {
+            return res.status(400).json({ error: "user_id, title y content son requeridos" });
+        }
+
+        const result = await query(`
+            INSERT INTO notifications (user_id, title, content, type, link)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+        `, [user_id, title, content, type || 'info', link]);
+
+        res.json({ success: true, notification: result.rows[0] });
+    } catch (err) {
+        console.error('❌ Error creando notificación:', err);
+        res.status(500).json({ error: "Error creando notificación" });
+    }
+});
+
+// Marcar notificación como leída
+app.put('/api/notifications/:id/read', async (req, res) => {
+    try {
+        const result = await query(`
+            UPDATE notifications SET read = true 
+            WHERE id = $1 
+            RETURNING *
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Notificación no encontrada" });
+        }
+
+        res.json({ success: true, notification: result.rows[0] });
+    } catch (err) {
+        console.error('❌ Error actualizando notificación:', err);
+        res.status(500).json({ error: "Error actualizando notificación" });
+    }
+});
+
+// Eliminar notificación
+app.delete('/api/notifications/:id', async (req, res) => {
+    try {
+        const result = await query(`
+            DELETE FROM notifications 
+            WHERE id = $1 
+            RETURNING *
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Notificación no encontrada" });
+        }
+
+        res.json({ success: true, message: "Notificación eliminada" });
+    } catch (err) {
+        console.error('❌ Error eliminando notificación:', err);
+        res.status(500).json({ error: "Error eliminando notificación" });
     }
 });
 

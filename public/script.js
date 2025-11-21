@@ -59,22 +59,20 @@ async function initApp() {
     
     try {
         // Probar conexión con la API
-        const health = await apiRequest('/health');
-        console.log('✅ API conectada:', health.message);
-        
-        // Cargar datos iniciales
-        await loadInitialData();
+        const response = await fetch(`${API_BASE_URL}/health`);
+        if (response.ok) {
+            const health = await response.json();
+            console.log('✅ API conectada:', health.message);
+            
+            // ⭐⭐ CARGAR DATOS DESDE LA API ⭐⭐
+            await loadInitialData();
+        } else {
+            throw new Error('API no responde correctamente');
+        }
         
     } catch (error) {
-        if (error.message === 'OFFLINE_MODE') {
-            console.log('📱 Modo offline activado');
-            // Cargar datos desde localStorage
-            loadDataFromStorage();
-        } else {
-            console.error('❌ Error inicializando app:', error);
-            // Fallback a datos locales
-            loadDataFromStorage();
-        }
+        console.log('📱 Modo offline - Usando datos locales');
+        loadDataFromStorage();
     }
     
     // Set up event listeners
@@ -88,27 +86,48 @@ async function initApp() {
     updatePublicHeader();
     
     console.log('✅ Sistema de Revista Digital inicializado correctamente');
+    console.log('📊 Artículos listos para mostrar:', state.articles.length);
 }
+// TEMPORAL: Deshabilitar todos los clics problemáticos
+document.addEventListener('click', function(e) {
+    // Deshabilitar clics en artículos
+    if (e.target.closest('.article-card')) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔒 Clic en artículo deshabilitado temporalmente');
+        return false;
+    }
+    
+    // Deshabilitar clics en botones de artículos
+    if (e.target.closest('[onclick*="showArticleDetail"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔒 Clic en detalle de artículo deshabilitado');
+        return false;
+    }
+});
 
 // Cargar datos iniciales desde la API
+// En la función loadInitialData() o donde cargas artículos
 async function loadInitialData() {
     try {
-        // Cargar artículos públicos
-        const articlesData = await apiRequest('/articles?status=published');
+        console.log('🔄 [FRONTEND] Cargando datos desde la API...');
+        
+        // Cargar artículos desde la API
+        const articlesData = await apiRequest('/articles');
+        console.log('📥 [FRONTEND] Artículos recibidos de la API:', articlesData.articles?.length || 0);
+        
+        // Actualizar el estado con los datos de la API
         state.articles = articlesData.articles || [];
         
-        // Cargar usuarios (solo si es admin)
-        if (state.currentUser && state.currentUser.role === 'admin') {
-            const usersData = await apiRequest('/users');
-            state.users = usersData.users || [];
-        }
+        console.log('💾 [FRONTEND] Artículos en estado:', state.articles.length);
         
         // Guardar en localStorage como backup
         saveDataToStorage();
         
     } catch (error) {
-        console.error('Error cargando datos iniciales:', error);
-        throw error;
+        console.log('📱 [FRONTEND] Modo offline - Usando datos locales');
+        loadDataFromStorage();
     }
 }
 
@@ -180,19 +199,6 @@ function loadDataFromStorage() {
         }
     ];
 
-    function showCreateUserForm() {
-    document.getElementById('new-user-name').value = '';
-    document.getElementById('new-user-username').value = '';
-    document.getElementById('new-user-password').value = '';
-    document.getElementById('new-user-role').value = 'student';
-    document.getElementById('new-user-talento').value = '';
-
-    showPage('create-user-page');
-}
-window.showCreateUserForm = showCreateUserForm;
-
-
-
     const backupArticles = [
         {
             id: 1,
@@ -222,9 +228,20 @@ window.showCreateUserForm = showCreateUserForm;
         }
     ];
     
-    state.users = savedUsers ? JSON.parse(savedUsers) : backupUsers;
-    state.articles = savedArticles ? JSON.parse(savedArticles) : backupArticles;
+    // ⭐⭐ SOLO cargar si state está vacío ⭐⭐
+    if (state.users.length === 0) {
+        state.users = savedUsers ? JSON.parse(savedUsers) : backupUsers;
+    }
+    
+    if (state.articles.length === 0) {
+        state.articles = savedArticles ? JSON.parse(savedArticles) : backupArticles;
+    }
+    
     state.notifications = savedNotifications ? JSON.parse(savedNotifications) : backupNotifications;
+    
+    console.log('📱 [STORAGE] Usuarios:', state.users.length);
+    console.log('📱 [STORAGE] Artículos:', state.articles.length);
+    console.log('📱 [STORAGE] Notificaciones:', state.notifications.length);
 }
 
 // Save data to localStorage
@@ -238,6 +255,18 @@ function saveDataToStorage() {
         console.error('Error guardando en localStorage:', error);
     }
 }
+
+// ⭐⭐ ESTA FUNCIÓN VA AQUÍ FUERA ⭐⭐
+function showCreateUserForm() {
+    document.getElementById('new-user-name').value = '';
+    document.getElementById('new-user-username').value = '';
+    document.getElementById('new-user-password').value = '';
+    document.getElementById('new-user-role').value = 'student';
+    document.getElementById('new-user-talento').value = '';
+
+    showPage('create-user-page');
+}
+window.showCreateUserForm = showCreateUserForm;
 
 // FUNCIÓN DE LOGIN CORREGIDA - REEMPLAZAR LA VERSIÓN COMENTADA
 async function handleLogin(e) {
@@ -761,7 +790,18 @@ console.log('🔧 Frontend configurado para producción');
 // =======================
 // FUNCIONES PRINCIPALES MEJORADAS
 // =======================
+// Ver artículos sin hacer clic
+console.log('📊 Artículos cargados:', state.articles.length);
+console.log('📋 Artículos publicados:', 
+    state.articles.filter(a => a.status === 'published').map(a => ({
+        id: a.id,
+        title: a.title,
+        chapter: a.chapter
+    }))
+);
 
+// Ver la revista pública
+showPublicMagazine();
 // Initialize application
 // Initialize application
 async function initApp() {
@@ -926,8 +966,16 @@ function showPublicMagazine() {
     updatePublicHeader();
 }
 
+
+// Load public magazine content
 // Load public magazine content
 function loadPublicMagazine() {
+    console.log('📖 [FRONTEND] Cargando revista pública...');
+    console.log('📊 [FRONTEND] Total de artículos en estado:', state.articles.length);
+    console.log('🎯 [FRONTEND] Artículos publicados:', 
+        state.articles.filter(a => a.status === 'published').length
+    );
+    
     loadPublicPortafolios();
     loadPublicExperiencias();
     loadPublicPosicionamiento();
@@ -936,28 +984,32 @@ function loadPublicMagazine() {
 // Load public portafolios
 function loadPublicPortafolios() {
     const grid = document.getElementById('public-portafolios-grid');
-    const portafolios = state.articles.filter(a => a.chapter === 'portafolios' && a.status === 'published');
+    const portafolios = state.articles.filter(a => 
+        a.chapter === 'portafolios' && a.status === 'published'
+    );
+    
+    console.log('📂 [PORTFOLIOS] Artículos encontrados:', portafolios.length);
+    console.log('📂 [PORTFOLIOS] Detalles:', portafolios.map(p => ({ id: p.id, title: p.title })));
     
     let html = '';
     portafolios.forEach(article => {
         html += `
             <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
                 <div class="article-image">
-                    ${article.imageFile ? 
-                        `<img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}">` : 
+                    ${article.image_url ? 
+                        `<img src="${article.image_url}" alt="${article.title}">` : 
                         getCategoryIcon(article.category)
                     }
                 </div>
                 <div class="article-content">
                     <h3 class="article-title">${article.title}</h3>
                     <div class="article-meta">
-                        <span>Por: ${article.author}</span>
-                        <span>${formatDate(article.createdAt)}</span>
+                        <span>Por: ${article.author_name}</span>
+                        <span>${formatDate(article.created_at)}</span>
                     </div>
                     <div class="article-excerpt">${article.content.substring(0, 120)}...</div>
                     <div class="article-meta">
                         <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
-                        <span>💬 ${article.comments.length}</span>
                     </div>
                 </div>
             </div>
@@ -965,76 +1017,107 @@ function loadPublicPortafolios() {
     });
     
     grid.innerHTML = html || '<p class="no-content">No hay portafolios publicados aún.</p>';
+    console.log('🖼️ [PORTFOLIOS] HTML generado:', html ? 'SÍ' : 'NO');
 }
 
 // Load public experiencias
+// Load public experiencias
 function loadPublicExperiencias() {
     const grid = document.getElementById('public-experiencias-grid');
-    const experiencias = state.articles.filter(a => a.chapter === 'experiencias' && a.status === 'published');
+    const experiencias = state.articles.filter(a => 
+        a.chapter === 'experiencias' && a.status === 'published'
+    );
+    
+    console.log('📚 [EXPERIENCIAS] Artículos encontrados:', experiencias.length);
+    console.log('📚 [EXPERIENCIAS] Detalles:', experiencias.map(e => ({ id: e.id, title: e.title })));
     
     let html = '';
-    experiencias.forEach(article => {
-        html += `
-            <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
-                <div class="article-image">
-                    ${article.imageFile ? 
-                        `<img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}">` : 
-                        getCategoryIcon(article.category)
-                    }
-                </div>
-                <div class="article-content">
-                    <h3 class="article-title">${article.title}</h3>
-                    <div class="article-meta">
-                        <span>Por: ${article.author}</span>
-                        <span>${formatDate(article.createdAt)}</span>
-                    </div>
-                    <div class="article-excerpt">${article.content.substring(0, 120)}...</div>
-                    <div class="article-meta">
-                        <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
-                        <span>💬 ${article.comments.length}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
     
-    grid.innerHTML = html || '<p class="no-content">No hay experiencias pedagógicas publicadas aún.</p>';
+    // ⭐⭐ VERIFICAR QUE HAY ARTÍCULOS ANTES DE ITERAR ⭐⭐
+    if (experiencias.length === 0) {
+        html = '<p class="no-content">No hay experiencias pedagógicas publicadas aún.</p>';
+    } else {
+        experiencias.forEach(article => {
+            // ⭐⭐ VERIFICAR QUE article.content EXISTA ⭐⭐
+            const content = article.content || '';
+            const excerpt = content.substring(0, 120) + (content.length > 120 ? '...' : '');
+            
+            html += `
+                <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
+                    <div class="article-image">
+                        ${article.image_url ? 
+                            `<img src="${article.image_url}" alt="${article.title}">` : 
+                            getCategoryIcon(article.category)
+                        }
+                    </div>
+                    <div class="article-content">
+                        <h3 class="article-title">${article.title}</h3>
+                        <div class="article-meta">
+                            <span>Por: ${article.author_name || article.author}</span>
+                            <span>${formatDate(article.created_at || article.createdAt)}</span>
+                        </div>
+                        <div class="article-excerpt">${excerpt}</div>
+                        <div class="article-meta">
+                            <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    grid.innerHTML = html;
+    console.log('🖼️ [EXPERIENCIAS] HTML generado:', html ? 'SÍ' : 'NO');
 }
 
 // Load public posicionamiento
+// Load public posicionamiento
 function loadPublicPosicionamiento() {
     const grid = document.getElementById('public-posicionamiento-grid');
-    const posicionamientos = state.articles.filter(a => a.chapter === 'posicionamiento' && a.status === 'published');
+    const posicionamientos = state.articles.filter(a => 
+        a.chapter === 'posicionamiento' && a.status === 'published'
+    );
+    
+    console.log('💭 [POSICIONAMIENTO] Artículos encontrados:', posicionamientos.length);
     
     let html = '';
-    posicionamientos.forEach(article => {
-        html += `
-            <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
-                <div class="article-image">
-                    ${article.imageFile ? 
-                        `<img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}">` : 
-                        getCategoryIcon(article.category)
-                    }
-                </div>
-                <div class="article-content">
-                    <h3 class="article-title">${article.title}</h3>
-                    <div class="article-meta">
-                        <span>Por: ${article.author}</span>
-                        <span>${formatDate(article.createdAt)}</span>
-                    </div>
-                    <div class="article-excerpt">${article.content.substring(0, 120)}...</div>
-                    <div class="article-meta">
-                        <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
-                        <span>💬 ${article.comments.length}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
     
-    grid.innerHTML = html || '<p class="no-content">No hay reflexiones críticas publicadas aún.</p>';
+    // ⭐⭐ VERIFICAR QUE HAY ARTÍCULOS ⭐⭐
+    if (posicionamientos.length === 0) {
+        html = '<p class="no-content">No hay reflexiones críticas publicadas aún.</p>';
+    } else {
+        posicionamientos.forEach(article => {
+            // ⭐⭐ VERIFICAR QUE article.content EXISTA ⭐⭐
+            const content = article.content || '';
+            const excerpt = content.substring(0, 120) + (content.length > 120 ? '...' : '');
+            
+            html += `
+                <div class="article-card" onclick="showPublicArticleDetail(${article.id})">
+                    <div class="article-image">
+                        ${article.image_url ? 
+                            `<img src="${article.image_url}" alt="${article.title}">` : 
+                            getCategoryIcon(article.category)
+                        }
+                    </div>
+                    <div class="article-content">
+                        <h3 class="article-title">${article.title}</h3>
+                        <div class="article-meta">
+                            <span>Por: ${article.author_name || article.author}</span>
+                            <span>${formatDate(article.created_at || article.createdAt)}</span>
+                        </div>
+                        <div class="article-excerpt">${excerpt}</div>
+                        <div class="article-meta">
+                            <span class="article-status ${getCategoryClass(article.category)}">${getCategoryName(article.category)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    grid.innerHTML = html;
+    console.log('🖼️ [POSICIONAMIENTO] HTML generado:', html ? 'SÍ' : 'NO');
 }
-
 // Show public article detail - IMPROVED VERSION
 function showPublicArticleDetail(articleId) {
     const article = state.articles.find(a => a.id === articleId && a.status === 'published');
@@ -1221,9 +1304,19 @@ async function handleLogin(e) {
             updateDashboard();
             updatePublicHeader();
             
-            // Cargar datos después del login
-            setTimeout(() => {
-                loadArticles();
+            // ⭐⭐ CARGAR DATOS DESPUÉS DEL LOGIN - VERSIÓN CORREGIDA ⭐⭐
+            setTimeout(async () => {
+                console.log('🔄 Cargando datos después del login...');
+                
+                // Cargar artículos desde la API
+                try {
+                    await loadInitialData();
+                    console.log('✅ Artículos cargados desde API:', state.articles.length);
+                } catch (error) {
+                    console.error('❌ Error cargando artículos:', error);
+                    loadArticles(); // Fallback a carga local
+                }
+                
                 if (data.user.role === 'admin') {
                     loadUsers();
                 }
@@ -1344,16 +1437,25 @@ function getCategoryName(category) {
 }
 
 // Get category icon
+// Verificar que estas funciones no fallen
 function getCategoryIcon(category) {
-    const icons = {
-        'deportivo': '🏃',
-        'musical': '🎵',
-        'matematico': '🔢',
-        'linguistico': '📝',
-        'tecnologico': '💻',
-        'artistico': '🎨'
-    };
-    return icons[category] || '📄';
+    const icon = {
+        'deportivo': '🏃', 'musical': '🎵', 'matematico': '🔢',
+        'linguistico': '📝', 'tecnologico': '💻', 'artistico': '🎨'
+    }[category] || '📄';
+    
+    console.log(`🎨 [ICON] Categoría: ${category} → Icono: ${icon}`);
+    return icon;
+}
+
+function formatDate(dateString) {
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES');
+    } catch (error) {
+        console.error('❌ Error formateando fecha:', dateString, error);
+        return 'Fecha inválida';
+    }
 }
 
 // Get category CSS class
@@ -1459,30 +1561,67 @@ function checkPasswordMatch() {
 }
 
 // Update dashboard with current data
+// Update dashboard with current data
 function updateDashboard() {
     if (!state.currentUser) return;
     
-    const publishedCount = state.articles.filter(a => a.status === 'published').length;
-    const pendingCount = state.articles.filter(a => a.status === 'pending').length;
-    const commentsCount = state.articles.reduce((total, article) => total + article.comments.length, 0);
-    const usersCount = state.users.filter(u => u.active).length;
-    
-    document.getElementById('published-count').textContent = publishedCount;
-    document.getElementById('pending-count').textContent = pendingCount;
-    document.getElementById('comments-count').textContent = commentsCount;
-    document.getElementById('users-count').textContent = usersCount;
-    document.getElementById('welcome-user-name').textContent = state.currentUser.name;
-    
-    loadNotifications();
+    try {
+        // ⭐⭐ VERIFICAR QUE state.articles EXISTA ⭐⭐
+        const articles = state.articles || [];
+        const users = state.users || [];
+        
+        const publishedCount = articles.filter(a => a.status === 'published').length;
+        const pendingCount = articles.filter(a => a.status === 'pending').length;
+        
+        // ⭐⭐ VERIFICAR QUE articles EXISTA ANTES DE REDUCE ⭐⭐
+        const commentsCount = articles.reduce((total, article) => {
+            const comments = article.comments || [];
+            return total + comments.length;
+        }, 0);
+        
+        const usersCount = users.filter(u => u.active).length;
+        
+        document.getElementById('published-count').textContent = publishedCount;
+        document.getElementById('pending-count').textContent = pendingCount;
+        document.getElementById('comments-count').textContent = commentsCount;
+        document.getElementById('users-count').textContent = usersCount;
+        document.getElementById('welcome-user-name').textContent = state.currentUser.name;
+        
+        loadNotifications();
+        
+    } catch (error) {
+        console.error('❌ Error en updateDashboard:', error);
+        // Valores por defecto en caso de error
+        document.getElementById('published-count').textContent = '0';
+        document.getElementById('pending-count').textContent = '0';
+        document.getElementById('comments-count').textContent = '0';
+        document.getElementById('users-count').textContent = '0';
+    }
 }
 
 // Load notifications
-function loadNotifications() {
+// Cargar notificaciones desde la base de datos
+async function loadNotifications() {
+    if (!state.currentUser) return;
+
+    try {
+        const data = await apiRequest(`/notifications?user_id=${state.currentUser.id}`);
+        state.notifications = data.notifications || [];
+        renderNotifications();
+    } catch (error) {
+        console.error('Error cargando notificaciones:', error);
+        // Fallback a localStorage
+        renderNotifications();
+    }
+}
+
+function renderNotifications() {
     const notificationsList = document.getElementById('notifications-list');
+    if (!notificationsList) return;
+
     let notificationsHTML = '';
-    
-    const userNotifications = state.notifications.slice(0, 5); // Show last 5
-    
+    const userNotifications = state.notifications.slice(0, 5);
+
     if (userNotifications.length === 0) {
         notificationsHTML = '<div class="notification"><p>No hay notificaciones recientes.</p></div>';
     } else {
@@ -1496,7 +1635,7 @@ function loadNotifications() {
                 <div class="${notificationClass}" onclick="markNotificationAsRead(${notification.id})">
                     <h4>${icon} ${notification.title}</h4>
                     <p>${notification.content}</p>
-                    <small>${formatDate(notification.createdAt)}</small>
+                    <small>${formatDate(notification.created_at)}</small>
                 </div>
             `;
         });
@@ -1506,20 +1645,64 @@ function loadNotifications() {
 }
 
 // Mark notification as read
-function markNotificationAsRead(notificationId) {
-    const notification = state.notifications.find(n => n.id === notificationId);
-    if (notification) {
-        notification.read = true;
-        saveDataToStorage();
-        if (notification.link) {
-            showPage(notification.link);
-            if (notification.link === 'pending-articles-page') {
-                loadPendingArticles();
-            } else if (notification.link === 'articles-page') {
-                loadArticles();
-            }
+// Marcar notificación como leída
+async function markNotificationAsRead(notificationId) {
+    try {
+        await apiRequest(`/notifications/${notificationId}/read`, {
+            method: 'PUT'
+        });
+
+        // Actualizar estado local
+        const notification = state.notifications.find(n => n.id === notificationId);
+        if (notification) {
+            notification.read = true;
         }
+        
         loadNotifications();
+        
+        // Navegar si tiene link
+        if (notification?.link) {
+            showPage(notification.link);
+        }
+    } catch (error) {
+        console.error('Error marcando notificación como leída:', error);
+        // Fallback local
+        const notification = state.notifications.find(n => n.id === notificationId);
+        if (notification) {
+            notification.read = true;
+            saveDataToStorage();
+            loadNotifications();
+        }
+    }
+}
+// Crear notificación en la base de datos
+async function createNotification(userId, title, content, type = 'info', link = null) {
+    try {
+        await apiRequest('/notifications', {
+            method: 'POST',
+            body: JSON.stringify({
+                user_id: userId,
+                title,
+                content,
+                type,
+                link
+            })
+        });
+    } catch (error) {
+        console.error('Error creando notificación:', error);
+        // Fallback: guardar en localStorage
+        const newNotification = {
+            id: state.notifications.length > 0 ? Math.max(...state.notifications.map(n => n.id)) + 1 : 1,
+            user_id: userId,
+            title,
+            content,
+            type,
+            read: false,
+            link,
+            created_at: new Date().toISOString().split('T')[0]
+        };
+        state.notifications.unshift(newNotification);
+        saveDataToStorage();
     }
 }
 
@@ -2000,9 +2183,13 @@ function rejectArticle(articleId) {
 }
 
 // Show article detail
+// Show article detail
 function showArticleDetail(articleId) {
     const article = state.articles.find(a => a.id === articleId);
-    if (!article) return;
+    if (!article) {
+        console.error('❌ Artículo no encontrado:', articleId);
+        return;
+    }
     
     const articleDetail = document.getElementById('article-detail-content');
     const statusClass = `article-status status-${article.status}`;
@@ -2010,28 +2197,29 @@ function showArticleDetail(articleId) {
     
     let actionsHTML = '';
 
-if (state.currentUser.role === 'admin') {
-    actionsHTML += `
-        <div class="action-buttons">
-            <button class="btn-danger" onclick="deleteArticle(${article.id})">🗑️ Eliminar Artículo</button>
-        </div>
-    `;
-}
+    if (state.currentUser.role === 'admin') {
+        actionsHTML += `
+            <div class="action-buttons">
+                <button class="btn-danger" onclick="deleteArticle(${article.id})">🗑️ Eliminar Artículo</button>
+            </div>
+        `;
+    }
 
-if ((state.currentUser.role === 'teacher' || state.currentUser.role === 'admin') && article.status === 'pending') {
-    actionsHTML = `
-        <div class="action-buttons">
-            <button class="btn-success" onclick="approveArticle(${article.id})">✅ Aprobar</button>
-            <button class="btn-danger" onclick="rejectArticle(${article.id})">❌ Rechazar</button>
-        </div>
-    `;
-} else if (state.currentUser.role === 'student' && article.author_id === state.currentUser.id && article.status !== 'published') {
-    actionsHTML = `
-        <div class="action-buttons">
-            <button onclick="editArticle(${article.id})">✏️ Editar</button>
-        </div>
-    `;
-}
+    if ((state.currentUser.role === 'teacher' || state.currentUser.role === 'admin') && article.status === 'pending') {
+        actionsHTML = `
+            <div class="action-buttons">
+                <button class="btn-success" onclick="approveArticle(${article.id})">✅ Aprobar</button>
+                <button class="btn-danger" onclick="rejectArticle(${article.id})">❌ Rechazar</button>
+            </div>
+        `;
+    } else if (state.currentUser.role === 'student' && article.author_id === state.currentUser.id && article.status !== 'published') {
+        actionsHTML = `
+            <div class="action-buttons">
+                <button onclick="editArticle(${article.id})">✏️ Editar</button>
+            </div>
+        `;
+    }
+    
     let rejectionHTML = '';
     if (article.rejectionReason) {
         rejectionHTML = `
@@ -2042,18 +2230,21 @@ if ((state.currentUser.role === 'teacher' || state.currentUser.role === 'admin')
         `;
     }
     
+    // ⭐⭐ VERIFICAR QUE article.comments EXISTA ⭐⭐
+    const comments = article.comments || [];
+    
     articleDetail.innerHTML = `
         <div class="form-container">
             <h2>${article.title}</h2>
             <div class="article-meta">
-                <span>Por: ${article.author}</span>
-                <span>${formatDate(article.createdAt)}</span>
+                <span>Por: ${article.author_name || article.author}</span>
+                <span>${formatDate(article.created_at || article.createdAt)}</span>
                 <span>${getCategoryName(article.category)} • ${getChapterName(article.chapter)}</span>
                 <span class="${statusClass}">${statusText}</span>
             </div>
             ${rejectionHTML}
-            ${article.imageFile ? `<div style="margin: 1rem 0; text-align: center;">
-                <img src="${URL.createObjectURL(article.imageFile)}" alt="${article.title}" style="max-width:100%; height:auto; border-radius: 8px;">
+            ${article.image_url ? `<div style="margin: 1rem 0; text-align: center;">
+                <img src="${article.image_url}" alt="${article.title}" style="max-width:100%; height:auto; border-radius: 8px;">
             </div>` : ''}
             <div style="margin: 1rem 0; line-height: 1.8; white-space: pre-line;">${article.content}</div>
             ${actionsHTML}
@@ -2061,7 +2252,10 @@ if ((state.currentUser.role === 'teacher' || state.currentUser.role === 'admin')
     `;
     
     document.getElementById('comment-article-id').value = articleId;
-    document.getElementById('comments-count-badge').textContent = `(${article.comments.length})`;
+    
+    // ⭐⭐ USAR LA VARIABLE comments EN LUGAR DE article.comments ⭐⭐
+    document.getElementById('comments-count-badge').textContent = `(${comments.length})`;
+    
     loadComments(articleId);
     showPage('article-detail-page');
 }
@@ -2177,29 +2371,47 @@ function reloadCurrentView() {
     }
     updateDashboard();
 }
+
 // Load comments for an article
 function loadComments(articleId) {
     const article = state.articles.find(a => a.id === articleId);
-    if (!article) return;
+    if (!article) {
+        console.error('❌ Artículo no encontrado para comentarios:', articleId);
+        return;
+    }
     
     const commentsList = document.getElementById('comments-list');
+    if (!commentsList) {
+        console.error('❌ Elemento comments-list no encontrado');
+        return;
+    }
+    
+    // ⭐⭐ VERIFICAR QUE article.comments EXISTA ⭐⭐
+    const comments = article.comments || [];
+    
     let commentsHTML = '';
     
-    if (article.comments.length === 0) {
+    if (comments.length === 0) {
         commentsHTML = '<div class="no-content"><p>No hay comentarios aún. ¡Sé el primero en comentar!</p></div>';
     } else {
-        article.comments.forEach(comment => {
+        comments.forEach(comment => {
+            // ⭐⭐ VERIFICAR PROPIEDADES DEL COMENTARIO ⭐⭐
+            const author = comment.author || 'Anónimo';
+            const content = comment.content || '';
+            const createdAt = comment.created_at || comment.createdAt || 'Fecha desconocida';
+            
             commentsHTML += `
                 <div class="notification">
-                    <h4>${comment.author}</h4>
-                    <p>${comment.content}</p>
-                    <small>${formatDate(comment.createdAt)}</small>
+                    <h4>${author}</h4>
+                    <p>${content}</p>
+                    <small>${formatDate(createdAt)}</small>
                 </div>
             `;
         });
     }
     
     commentsList.innerHTML = commentsHTML;
+    console.log('💬 Comentarios cargados:', comments.length);
 }
 
 // Add comment to an article
